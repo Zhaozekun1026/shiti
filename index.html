@@ -118,6 +118,11 @@ body{
   </div>
 </div>
 
+<div style="display:flex;background:var(--card);border-bottom:0.5px solid var(--sep);position:sticky;top:0;z-index:9;margin-top:-1px">
+  <div class="mode-tab active" data-mode="quiz" style="flex:1;text-align:center;padding:12px;font-size:15px;font-weight:600;cursor:pointer;color:var(--blue);border-bottom:2px solid var(--blue);transition:.2s">📝 刷题</div>
+  <div class="mode-tab" data-mode="recite" style="flex:1;text-align:center;padding:12px;font-size:15px;font-weight:500;cursor:pointer;color:var(--sub);border-bottom:2px solid transparent;transition:.2s">📖 背诵</div>
+</div>
+
 <div id="setup">
   <h3>📝 选择每组题数</h3>
   <div class="num-select">
@@ -130,6 +135,15 @@ body{
 </div>
 
 <div id="qa"></div>
+<div id="reciteSetup" style="display:none;margin:20px 16px;background:var(--card);border-radius:var(--radius);padding:24px 20px;text-align:center">
+<h3 style="font-size:20px;font-weight:700;margin-bottom:12px">📖 背诵模式</h3>
+<div style="font-size:14px;color:var(--sub);margin-bottom:16px">直接展示正确答案和解析，翻页背诵</div>
+<button class="btn-start" onclick="startRecite('all')" style="background:var(--green)">📚 背诵全部（101条）</button>
+<button class="btn-start" onclick="startRecite('all', reciteCursor['all'] || 0)" style="background:var(--green);margin-top:10px;opacity:0.8">▶ 从上次位置继续</button>
+<button class="btn-start" onclick="startRecite('unmemorized')" style="background:var(--orange);margin-top:10px">📖 只背没背过的</button>
+<button class="btn-start" onclick="showReciteList()" style="background:var(--blue);margin-top:10px">📋 知识点清单（点哪条背哪条）</button>
+</div>
+<div id="reciteArea" style="display:none"></div>
 <div id="sb" style="display:none"></div>
 
 <script>
@@ -454,6 +468,9 @@ function showWrongBook(){
 }
 
 function goHome(){
+  document.getElementById('reciteSetup').style.display='none';
+  document.getElementById('reciteArea').style.display='none';
+
   state.mode='normal'; state.pool=[]; state.currentIdx=0;
   state.multiPicks={}; state.answers={}; state.finished=false;
   document.getElementById('qa').innerHTML='';
@@ -461,6 +478,91 @@ function goHome(){
   document.getElementById('setup').style.display='block';
   updateStatsDisplay();
 }
+
+// ===== 背诵模式 =====
+var RECITE_CARDS = [{"title": "CIA — 信息安全三要素", "content": "💡 一句话：不是美国中情局。C=机密性(藏起来)、I=完整性(不准改)、A=可用性(随时能用)。三个加一起就是信息安全的三大目标。<br>📖 详细解释：<br>C = Confidentiality（机密性）：信息只能被授权人看到。如工资只有HR和本人能看。靠加密实现。<br>I = Integrity（完整性）：信息不能被偷偷修改。如考勤记录不能被人乱改。靠数字签名实现。<br>A = Availability（可用性）：要用的时候系统能正常用、数据不丢。如OA系统不能三天两头崩。靠备份容灾实现。"}, {"title": "PDCA — 戴明环（持续改进循环）", "content": "💡 一句话：做任何管理体系的四步循环：先计划→再执行→然后检查→最后改进，完了再开始新一轮。像减肥：定计划→开始运动→称体重→调整方案→继续。<br>📖 详细解释：<br>P = Plan（计划）：定目标、定策略。<br>D = Do（执行）：动手干。<br>C = Check（检查）：看看干得怎么样。<br>A = Act（改进）：把发现的问题改掉。"}, {"title": "ISMS — 信息安全管理体系", "content": "💡 一句话：公司管理信息安全的一整套制度+流程+技术+人的组合。不光是买防火墙装杀毒，而是从上到下的一套管理体系。<br>📖 详细解释：<br>ISMS = Information Security Management System<br>核心标准是ISO 27001。基于PDCA持续改进。<br>范围可以是全公司，也可以只针对某个系统。<br>不是单纯的技术问题，涉及人员、流程、组织架构。"}, {"title": "ISO — 国际标准化组织", "content": "💡 一句话：一个制定国际标准的组织。就像'国际标准局'。ISO 27001就是他们发布的信息安全标准。<br>📖 详细解释：<br>ISO = International Organization for Standardization<br>信息安全相关ISO标准：<br>• ISO 27001：信息安全管理体系(最核心)<br>• ISO 27002：安全管理实践指南<br>• ISO 27034：应用安全<br>• ISO 27701：隐私信息管理<br>• ISO 9001：质量管理(这不属于信息安全标准！)"}, {"title": "VPN — 虚拟专用网络", "content": "💡 一句话：在公网上建一条加密的秘密通道。你在外面连公司内网，先开VPN，数据就加密了，别人截获了也看不懂。<br>📖 详细解释：<br>VPN = Virtual Private Network<br>比喻：公共WiFi像在大街上喊话谁都能听见，VPN等于给你修了一条隔音管子。<br>核心功能：远程安全访问公司内网。<br>不提供：真正的网络匿名(那是Tor)、数据压缩、负载均衡。"}, {"title": "HTTPS / SSL / TLS — 网页加密传输", "content": "💡 一句话：HTTPS=加密版网页。普通HTTP像明信片(谁都能看)，HTTPS像保险箱(加密的)。地址栏有🔒就是HTTPS。默认端口443。<br>📖 详细解释：<br>HTTP：明文传输，端口80，不安全<br>HTTPS = HTTP + SSL/TLS：加密传输，端口443<br>SSL：Secure Sockets Layer，早期的加密协议<br>TLS：Transport Layer Security，SSL的升级版"}, {"title": "TCP — 传输控制协议", "content": "💡 一句话：两台电脑通信时用的规则。三次握手就像打电话：我打给你(SYN)→你接起来说喂(SYN-ACK)→我说你好(ACK)→开始聊天。<br>📖 详细解释：<br>TCP = Transmission Control Protocol<br>三次握手顺序(不可变)：<br>① 客户端→服务器：SYN(我要和你通信)<br>② 服务器→客户端：SYN-ACK(听到了，你也能听到我吗)<br>③ 客户端→服务器：ACK(听到了，开始吧)"}, {"title": "DDoS — 分布式拒绝服务攻击", "content": "💡 一句话：攻击者从全世界控制几万台肉鸡电脑，同时疯狂访问一个网站，把它挤瘫了，正常用户进不去。不是偷数据，是搞破坏。<br>📖 详细解释：<br>DDoS = Distributed Denial of Service<br>Distributed=分布式的(从很多台机器同时打)<br>Denial=拒绝<br>Service=服务"}, {"title": "SQL — 结构化查询语言", "content": "💡 一句话：数据库的操作语言。SQL注入=攻击者在输入框写SQL命令，欺骗数据库执行不该做的操作。比如在登录框写一段代码绕过密码验证。<br>📖 详细解释：<br>SQL = Structured Query Language<br>所有网站后台都有数据库，SQL就是操作数据库的语言。<br>SQL注入(SQL Injection)：在输入框注入恶意SQL命令。如输入 ' OR '1'='1 来绕过登录。<br>属于技术攻击，不是社会工程学(不是骗人)。"}, {"title": "XSS — 跨站脚本攻击", "content": "💡 一句话：攻击者在网页里植入恶意JavaScript代码。你浏览这个网页时，脚本在你的浏览器里偷偷执行，可能偷走你的登录信息。<br>📖 详细解释：<br>XSS = Cross-Site Scripting<br>为什么简称XSS不是CSS？CSS已经被层叠样式表占用了。<br>发生位置：客户端浏览器(不是在服务器或数据库)。<br>原理：网站没过滤用户输入，攻击者提交了含恶意脚本的内容，其他用户浏览时脚本执行。"}, {"title": "0day / 1day — 漏洞命名", "content": "💡 一句话：0day=厂商还不知道或知道了还没出补丁的漏洞(最危险)。1day=补丁已出但你还装的漏洞。就像发现了锁的缺陷，锁厂还没造出新锁。<br>📖 详细解释：<br>0day(零日漏洞)：漏洞被发现但官方没补丁。所有人都是裸奔状态。<br>1day：补丁已发布但有些系统还没装。<br>Exploit：漏洞利用工具(用来攻击的程序代码)<br>Backdoor：后门(故意留下的隐蔽入口)"}, {"title": "DLP — 数据防泄露系统", "content": "💡 一句话：监控并阻止员工把公司敏感数据偷偷发出去(邮件/U盘/网盘)，防止内部人泄密。像一个数据门卫。<br>📖 详细解释：<br>DLP = Data Loss Prevention<br>监控所有数据外传通道(邮件、USB拷贝、网盘上传、打印等)<br>发现敏感内容就拦截并报警。<br>防的是内部泄露(员工泄密)，不防外部黑客攻击。"}, {"title": "SIEM — 安全信息和事件管理", "content": "💡 一句话：把公司所有安全设备的日志收集到一起，自动分析，发现异常就告警。像一个安全监控中心。<br>📖 详细解释：<br>SIEM = Security Information and Event Management<br>收集所有日志(防火墙、服务器、杀毒软件)→关联分析→发现攻击行为→报警。<br>比如：同一账号在不同城市1分钟内登录两次→SIEM发现异常→可能是被盗号→触发告警。"}, {"title": "2FA / MFA — 双因素认证 / 多因素认证", "content": "💡 一句话：登录时不止要密码，还要第二种验证方式——比如手机验证码或者指纹。双重保险。密码泄露了别人也登不了。<br>📖 详细解释：<br>2FA = Two-Factor Authentication<br>MFA = Multi-Factor Authentication"}, {"title": "NIST CSF — 美国NIST网络安全框架", "content": "💡 一句话：美国标准局发布的网络安全框架。把安全工作分成六块：识别→保护→检测→响应→恢复→治理。<br>📖 详细解释：<br>NIST = National Institute of Standards and Technology(美国国家标准与技术研究院)<br>CSF = Cybersecurity Framework"}, {"title": "C2M2 — 网络安全能力成熟度模型", "content": "💡 一句话：评估一个组织的网络安全水平到了什么级别。美国能源部开发的，专门用于关键基础设施行业。<br>📖 详细解释：<br>C2M2 = Cybersecurity Capability Maturity Model<br>开发者：美国能源部(DOE)<br>用途：评估组织(尤其能源、关键基础设施)的网络安全能力有多成熟。<br>像游戏段位：青铜→白银→黄金→钻石。1级(基础)→4级(优化)。<br>★ TOGAF是企业架构，SABSA是安全架构，MSF是微软框架。它们都不是成熟度模型。"}, {"title": "SABSA — 业务驱动的安全架构", "content": "💡 一句话：先搞清楚业务需要什么，再设计安全方案。安全是给业务服务的，不是反过来。<br>📖 详细解释：<br>SABSA = Sherwood Applied Business Security Architecture<br>核心特点：基于业务驱动(Business-driven)<br>流程：先理解业务目标→分析业务风险→设计安全架构<br>与其他框架区别：SABSA从业务出发，不是从技术出发。"}, {"title": "CBM — 组件化业务模型", "content": "💡 一句话：把公司业务拆成一个个独立的组件(像乐高积木)。每个组件可以单独管理。IBM提出来的。<br>📖 详细解释：<br>CBM = Component-Based Business Model<br>谁提出的：IBM<br>全称：组件化业务模型<br>组件是什么：业务流程中可管理的业务单元。如采购管理、库存管理各自是一个组件。<br>★ 组件不是软件模块、不是硬件设备、不是数据库表！是业务单元。"}, {"title": "KPI / KRI — 关键绩效指标 / 关键风险指标", "content": "💡 一句话：衡量安全管理做得好不好的两个指标。KPI=做对了多少(好事)，KRI=还有多少危险(坏事)。<br>📖 详细解释：<br>KPI = Key Performance Indicator：如补丁安装率99%、安全培训完成率100%<br>KRI = Key Risk Indicator：如未修复高危漏洞数量、过期证书数量"}, {"title": "CVE — 公共漏洞和暴露", "content": "💡 一句话：给每个已知安全漏洞分配一个全球唯一的编号，像身份证号。安全人员一说CVE-2021-44228就知道是Log4j漏洞。<br>📖 详细解释：<br>CVE = Common Vulnerabilities and Exposures<br>由MITRE公司维护。<br>格式：CVE-年份-序号，如CVE-2021-44228。<br>全球统一编号，方便安全社区交流和追踪。"}, {"title": "BIA — 业务影响分析", "content": "💡 一句话：分析每个业务如果中断了，会对公司造成多大损失。哪个业务断了最疼，就先恢复哪个。<br>📖 详细解释：<br>BIA = Business Impact Analysis<br>做什么：识别关键业务流程→分析中断会损失多少→确定恢复优先级<br>比如：支付系统中断1小时损失100万，邮件中断1小时损失1万→先恢复支付系统。<br>BIA是业务连续性管理(BCM)的核心部分。"}, {"title": "DRP / BCP — 灾难恢复计划 / 业务连续性计划", "content": "💡 一句话：DRP=着火了地震了怎么恢复IT系统。BCP=更大范围，不仅恢复IT，还要保证整个业务能继续运转。<br>📖 详细解释：<br>DRP = Disaster Recovery Plan：专注IT系统恢复(服务器、网络)<br>BCP = Business Continuity Plan：更全面，包括人员、场地、供应商等<br>BCM = Business Continuity Management：持续管理过程，不是一次性的。"}, {"title": "DMZ — 隔离区(非军事区)", "content": "💡 一句话：在互联网和公司内网之间的一个缓冲区。放对外的服务器(网站)，外网能访问DMZ但DMZ不能直接访问内网。即使Web服务器被攻破，攻击者也到不了内网数据库。<br>📖 详细解释：<br>DMZ = Demilitarized Zone(非军事区，军事术语)<br>典型架构：互联网→外层防火墙→DMZ区(Web/邮件/DNS服务器)→内层防火墙→内网(数据库)<br>即使DMZ的Web服务器被黑，攻击者在内网的数据库也碰不到。"}, {"title": "ACL — 访问控制列表", "content": "💡 一句话：一张清单，写着谁可以访问什么、有什么权限(读/写/删)。像门禁系统：张三可以进A区，不能进B区。<br>📖 详细解释：<br>ACL = Access Control List<br>功能：定义哪些用户/进程可以访问哪些资源及操作权限。<br>对应题干：明确用户可访问资源并定期维护=ACL管理。<br>区别于身份认证(确认你是谁)和访问授权(给你什么权限)。"}, {"title": "Modbus — 工控通信协议", "content": "💡 一句话：工业设备之间说话用的语言。风机、PLC、传感器用Modbus协议互相传数据。实操题第5/6题就是分析Modbus流量。<br>📖 详细解释：<br>Modbus = 工控领域最广泛使用的通信协议，1979年发明。<br>功能码06(写单个寄存器)、功能码10(写多个寄存器)<br>用Wireshark抓包可分析Modbus流量。<br>实操题的工控安全场景：风机转速过快导致故障，需分析Modbus流量包。"}, {"title": "Webshell — 网站后门脚本", "content": "💡 一句话：攻击者上传到网站服务器上的恶意脚本文件。通过浏览器访问这个文件就能远程控制服务器，执行任意命令。<br>📖 详细解释：<br>Web + Shell = 通过网页执行系统命令<br>最常见的一句话木马(PHP)：<br><?php @eval($_POST[\"cmd\"]);?>"}, {"title": "ICS / SCADA — 工业控制系统", "content": "💡 一句话：工厂里控制机器运转的系统。实操题里的风机控制系统就是ICS。被黑客攻击可能导致生产线瘫痪甚至安全事故。<br>📖 详细解释：<br>ICS = Industrial Control System(工业控制系统)<br>SCADA = Supervisory Control And Data Acquisition(数据采集与监视控制)"}, {"title": "OWASP — 开放Web应用安全项目", "content": "💡 一句话：一个全球安全社区，专门研究Web应用的安全风险。最出名的是OWASP Top 10(十大Web安全风险排行榜)。<br>📖 详细解释：<br>OWASP = Open Web Application Security Project<br>OWASP Top 10：每几年发布的十大最危险Web应用安全风险。<br>包括：SQL注入、XSS、CSRF、失效的访问控制、安全配置错误等。<br>考试只需知道：OWASP Top 10 = 十大Web安全风险排行榜。"}, {"title": "1. 信息安全CIA三要素", "content": "机密性(Confidentiality)：防泄露，信息不被未授权者看到。靠加密、访问控制实现。\n完整性(Integrity)：防篡改，信息不被未授权修改。靠哈希校验、数字签名实现。\n可用性(Availability)：防中断，授权用户需要时系统能用、数据能取。靠备份、容灾实现。\n\n★ 考试必考，三套卷子都出现。混淆项：可扩展性、可控性、可靠性——都不是CIA。CIA只有这三个。"}, {"title": "2. 信息安全本质与目标", "content": "信息安全管理的目标：将风险控制在可接受水平——不是追求绝对安全（绝对安全不存在）。\n信息安全的本质：风险管理，不是技术堆砌。\n信息安全三要素是机密性、完整性、可用性，不是可扩展性或可控性。"}, {"title": "3. 最小权限原则", "content": "用户只被授予完成工作所需的最小权限，不多给。\n★ 判断题常考：题目说\"用户应该拥有尽可能多的权限\"是错的。\n★ 最小权限是信息安全管理的基本原则之一。"}, {"title": "4. 纵深防御", "content": "多层、多手段的安全防护，不依赖单一防线。在网络、主机、应用、数据各层都部署安全措施。"}, {"title": "5. 信息安全 ≠ 仅技术", "content": "信息安全管理涉及人员、流程、组织架构、技术多方面。判断题：\"信息安全管理只需关注技术层面\"是错的。"}, {"title": "6. PDCA循环（戴明环）", "content": "Plan(计划)→Do(执行)→Check(检查)→Act(改进)。ISMS基于PDCA持续改进。\n★ Plan=建立目标和过程(制定ISMS策略、确定风险应对措施)\n★ Do=实施控制措施\n★ Check=监控和评审\n★ Act=纠正和改进\n★ 判断题：\"Check阶段是实施控制措施\"是错的，那是Do阶段干的。"}, {"title": "7. 信息安全\"免疫系统\"比喻", "content": "强调主动发现和响应，而非被动防御。像人体免疫系统一样主动识别威胁并做出响应。"}, {"title": "8. ISO 27001", "content": "国际公认的信息安全管理体系(ISMS)标准。核心作用：提供建立、实施、维护和持续改进ISMS的框架。\n★ 认证周期通常3年，每年监督审核。\n★ 2026模拟卷高频考点，反复出现。"}, {"title": "9. ISO 27002", "content": "信息安全管理实践准则。ISO 27001是\"要做什么\"(管理体系要求)，ISO 27002是\"怎么做\"(操作指南/控制措施实施指南)。\n★ 两套卷子都考过ISO 27001 vs ISO 27002的区别。"}, {"title": "10. 其他ISO 27000系列", "content": "ISO 27034=应用安全标准\nISO 27017=云服务安全\nISO 27018=云隐私保护\nISO 27701=隐私信息管理\nISO 22301=业务连续性管理\nISO 9001=质量管理(不属于信息安全标准！)\n★ 考试常考\"哪个不属于信息安全标准\"，选ISO 9001。"}, {"title": "11. BS 7799", "content": "英国标准，是ISO 27001的前身，也是信息安全建设指南。三者关系要清楚。"}, {"title": "12. 《网络安全法》", "content": "2017年6月1日正式施行。核心要求：\n• 实行网络安全等级保护制度(等保)\n• 网络运营者采取数据分类、重要数据备份和加密等措施\n• 网络实名制\n• 适用于所有网络运营者(不是仅政府机构！)\n★ 《关基条例》的制定依据就是《网络安全法》。"}, {"title": "13. 《数据安全法》", "content": "2021年9月1日施行。关键内容：\n• 国家建立数据安全审查制度\n• 国家建立数据交易管理制度，中介机构需履行审查义务\n• 重要数据处理者需定期开展风险评估\n• 数据分类分级保护"}, {"title": "14. 《个人信息保护法》", "content": "关键内容：\n• 处理个人信息应遵循合法、正当、必要原则\n• 敏感个人信息：生物识别信息、医疗健康、金融账户、行踪轨迹等(姓名、性别、工作单位不是敏感个人信息！)\n• 跨境传输需安全评估、标准合同或认证"}, {"title": "15. 《关键信息基础设施安全保护条例》(关基条例)", "content": "制定依据：《网络安全法》\n• 运营者应优先采购安全可信的网安产品和服务\n• 关基认定由重要行业和领域的主管部门负责\n• 安全保护措施：数据分类、备份、加密等"}, {"title": "16. 等保2.0", "content": "中国信息安全保护的国家标准(不是国际标准！不是仅适用金融行业！)。\n安全保护等级分为5级：1级(自主保护)→5级(专控保护)。\n★ 定级依据：受损后对公民权益、社会秩序、国家安全的损害程度。"}, {"title": "17. VPN", "content": "Virtual Private Network(虚拟专用网络)。核心功能：远程安全访问(在公共网络上建立加密通道)。不提供真正的网络匿名。"}, {"title": "18. HTTPS与SSL/TLS", "content": "HTTPS默认端口：443。HTTP默认端口：80。\nSSL/TLS作用：为网络通信提供加密和身份认证+数据完整性保护。\nHTTPS = HTTP + SSL/TLS。地址栏有🔒图标。"}, {"title": "19. TCP三次握手", "content": "顺序：SYN(客户端→服务端) → SYN-ACK(服务端→客户端) → ACK(客户端→服务端)\n★ 口诀：S-SYN, SYN-ACK, ACK。顺序不可变。"}, {"title": "20. DNS解析", "content": "DNS(Domain Name System，域名系统)。将域名解析为IP地址。\n解析过程：浏览器缓存→本地hosts文件→本地DNS缓存→DNS递归查询(从根服务器开始)。\n★ DNS服务器端查询首先从根服务器开始。"}, {"title": "21. DDoS攻击", "content": "Distributed Denial of Service(分布式拒绝服务攻击)。目的：耗尽服务器资源(带宽/CPU/内存)，使正常用户无法访问。\n★ 不是窃取信息，是搞瘫服务。攻击的是可用性(Availability)。"}, {"title": "22. SQL注入", "content": "向Web应用输入框注入恶意SQL命令，欺骗后台数据库执行。属于技术攻击，不是社会工程学。"}, {"title": "23. XSS(跨站脚本攻击)", "content": "Cross-Site Scripting。攻击者向网页注入恶意脚本，在其他用户浏览器中执行。\n★ 发生在客户端浏览器中，不在服务器或数据库。"}, {"title": "24. 0day漏洞", "content": "官方未公布补丁的安全漏洞(厂商有\"零天\"来修复)。\n★ 区分：0day=没补丁，1day=补丁已出但未安装。Exploit=漏洞利用工具。Backdoor=后门。"}, {"title": "25. DLP(数据防泄露)", "content": "Data Loss Prevention。专门防止敏感数据通过邮件、USB、网络等途径泄露的系统。防内不防外。"}, {"title": "26. SIEM", "content": "Security Information and Event Management(安全信息和事件管理)。集中收集和分析各类安全日志。"}, {"title": "27. 双因素认证(2FA)", "content": "Two-Factor Authentication。使用两种不同类型的验证方式：\n• 你知道的：密码、PIN码\n• 你拥有的：手机验证码、U盾、门禁卡\n• 你本身的：指纹、人脸\n★ 两个密码不是双因素(同一类型)！"}, {"title": "28. 数字签名", "content": "基于非对称加密。发送方用私钥加密摘要，接收方用公钥验证。\n提供：完整性(数据未被篡改) + 不可否认性(发送方无法抵赖)。\n★ 判断题常考：数字签名可同时提供完整性和不可否认性——正确。"}, {"title": "29. OWASP Top 10", "content": "开放Web应用安全项目发布的十大最危险Web应用安全风险排名。包含SQL注入、XSS、CSRF等。"}, {"title": "30. 互联网接入时间", "content": "中国1994年4月20日正式全功能接入国际互联网。第77个成员国。"}, {"title": "31. phpStudy", "content": "国内常用的PHP集成开发环境，集成Apache+Nginx+MySQL+PHP+phpMyAdmin。集成的数据库是MySQL。"}, {"title": "32. Web常见漏洞 vs 系统漏洞", "content": "Web安全漏洞：SQL注入、XSS、CSRF、文件上传漏洞等。\n系统级漏洞：缓冲区溢出(C/C++程序常见)。\n★ 缓冲区溢出不是常见的Web安全漏洞。"}, {"title": "33. ISMS范围", "content": "信息安全管理体系(ISMS)范围：可以是组织整体或特定范围(特定系统、特定服务)。不是必须全组织。"}, {"title": "34. 安全三层架构", "content": "常见三层架构：决策层/治理层(制定战略策略)、管理层(风险评估+合规+培训)、执行层(日常运维)。\n多种表述均可：治理层/管理层/执行层、战略层/战术层/运营层。"}, {"title": "35. 安全策略制定", "content": "信息安全策略=组织信息安全的最高指导文件。必须由最高管理层批准发布。不是IT部门自己定。"}, {"title": "36. 风险处置四种方式", "content": "规避(不做这事) → 降低(采取控制措施) → 转移(买保险/外包) → 接受(低风险，承受)\n★ 购买保险=风险转移(不是风险消失)\n★ 风险接受=对低风险采取的策略(放任不管)\n★ 残余风险=经过处置后仍然存在的风险"}, {"title": "37. 风险评估", "content": "信息安全管理的基础。需定期进行(不是一次性的)。流程：资产识别→威胁识别→脆弱性识别→风险分析→风险处置。\n风险值=威胁概率×影响程度(简化公式)"}, {"title": "38. 资产分类与资产清单", "content": "资产分类核心目的：确保信息受到适当级别的保护。\n资产清单管理=全面识别并分类分级管理资产。\n信息资产包括：硬件、软件、数据、人员、服务等(不是只包括数据！)"}, {"title": "39. 安全基线", "content": "系统安全配置的最低标准。基线核查的目的：确认系统配置符合安全基准(不是发现高级威胁)。"}, {"title": "40. 漏洞扫描 vs 渗透测试", "content": "漏洞扫描：自动化工具识别已知漏洞，不利用漏洞。\n渗透测试：模拟攻击者，尝试利用漏洞进行攻击，需书面授权。\n★ 渗透测试≠漏洞扫描。渗透测试必须获授权后才能开展。"}, {"title": "41. 渗透测试流程", "content": "标准流程：前期准备(签授权书+保密协议)→信息收集→漏洞分析→漏洞利用→后渗透→报告输出→痕迹清理。\n★ 签署授权书属于前期准备阶段，不是信息收集阶段。"}, {"title": "42. 安全事件管理", "content": "核心目标：采用一致有效的方法管理事件(不是杜绝所有事件)。\n流程：检测与报告→评估与分类→响应与恢复→总结与改进。\n事件分级依据：影响范围和紧急程度。"}, {"title": "43. 应急响应", "content": "首要目标：恢复业务连续性(Business Continuity)。不是找到攻击者或起诉。"}, {"title": "44. 灾难恢复计划(DRP)", "content": "Disaster Recovery Plan。关注重大灾难(火灾/地震/洪水)后恢复IT系统和业务。不是日常运维。"}, {"title": "45. 业务连续性管理(BCM)", "content": "信息安全连续性控制措施：制定信息安全连续性计划、关键业务数据备份与恢复、建设备用数据中心。\n★ BIA(业务影响分析)是BCM的核心部分。"}, {"title": "46. 安全审计", "content": "日志应定期审查并安全存储，不可随意删除。保留期限通常6个月以上。\n安全审计日志可用于：发现异常行为、追溯安全事件、合规审计。"}, {"title": "47. KPI与KRI", "content": "ISMS测量的常用方法。KPI(关键绩效指标)+KRI(关键风险指标)。不是仅靠问卷或仅靠渗透测试。"}, {"title": "48. CVE", "content": "Common Vulnerabilities and Exposures(公共漏洞和暴露)。漏洞的唯一标识编码(如CVE-2021-44228)。"}, {"title": "49. NIST CSF", "content": "NIST网络安全框架。核心功能(1.0版五个)：识别(Identify)、保护(Protect)、检测(Detect)、响应(Respond)、恢复(Recover)。\n★ 2.0版新增第六个核心功能：治理(Govern)。\n★ 2026模拟卷考了NIST CSF 2.0新增功能。"}, {"title": "50. C2M2", "content": "网络安全能力成熟度模型(Cybersecurity Capability Maturity Model)。美国能源部开发。专门的成熟度模型。"}, {"title": "51. SABSA", "content": "安全架构方法论。核心特点：基于业务驱动(Business-driven)。★ 区别于基于风险或基于合规的方法论。"}, {"title": "52. IBM CBM", "content": "Component-Based Business Model(组件化业务模型)。IBM提出。\n\"组件\"=业务流程中的可管理业务单元(不是软件/硬件模块！)。\n全称：组件化业务模型。"}, {"title": "53. 安全成熟度等级", "content": "四级：\n1级(基础被动)：基本安全措施，被动应对\n2级(计划控制)：有计划的安全控制\n3级(体系规范)：广泛安全控制，主动防御，完善安全体系\n4级(积极优化)：持续优化改进\n★ \"广泛的安全控制，主动防御=3级体系规范\""}, {"title": "54. 安全运营评价域", "content": "子域包括：网络安全运营(资产管理、漏洞分析)和信息安全运营(数据安全、内容安全)两个。\n★ 安全统筹和安全能力属于其他评价域。"}, {"title": "55. 常见网络攻击类型", "content": "SQL注入、社会工程学、分布式拒绝服务(DDoS)。三者都是常见网络攻击类型。\n★ 物理破坏(自然灾害/设备故障)不是网络攻击。"}, {"title": "56. 社会工程学", "content": "利用人的心理弱点(信任、恐惧、好奇)进行欺骗性攻击。\n手段：冒充IT人员索要密码、钓鱼邮件、尾随、诱饵U盘。\n★ SQL注入、DDoS、缓冲区溢出不是社会工程学——它们是技术攻击。"}, {"title": "57. 网络钓鱼(Phishing)", "content": "主要利用社会工程学手段(骗人)。伪装正规机构(银行/公司IT/领导)，骗取账号密码等敏感信息。"}, {"title": "58. 内部威胁", "content": "内部人员泄露信息原因：疏忽(不小心)或恶意行为(故意)。两者都可能导致信息泄露。不是只有恶意才会泄露。"}, {"title": "59. 信息收集(渗透测试)", "content": "被动信息收集：不与目标直接交互，通过Google/Shodan/FoFa等公开渠道。隐蔽性强，不留下痕迹。\n主动信息收集：与目标直接交互，端口扫描/漏洞扫描等。更精准，但容易被检测到。\n★ 被动=不碰目标(查公开信息)；主动=碰目标(扫描探测)。"}, {"title": "60. XSS攻击环境", "content": "发生环境：客户端浏览器。攻击脚本在受害者浏览器中执行，不是服务器或数据库。"}, {"title": "61. Webshell与文件上传漏洞", "content": "Webshell：攻击者上传到Web服务器的恶意脚本文件，可通过浏览器远程执行系统命令。\n文件上传漏洞利用：\n• 一句话木马：<?php @eval($_POST[\"cmd\"]);?>\n• 上传后通过蚁剑/冰蝎等工具连接获取服务器控制权\n• flag查找命令：find / -name \"flag*\" 2>/dev/null"}, {"title": "62. 文件上传绕过技巧", "content": "当直接上传.php被拦截时，常见的绕过方法：\n• 扩展名变换：php3, php4, php5, phtml, pht\n• 大小写绕过：Php, pHp\n• 双扩展名：shell.php.jpg\n• Content-Type伪造：改为image/jpeg\n• 文件头伪造：添加GIF89a或PNG文件头\n• .htaccess文件绕过：上传.htaccess让Apache解析其他扩展名为PHP"}, {"title": "63. 工控安全与Modbus协议", "content": "工控系统(ICS)安全重要性：保护知识产权、维护生产连续性、遵守法规要求(不包括提高员工工资！)。\nModbus协议：工业控制领域最常见的通信协议。\n• 功能码06：写单个寄存器\n• 功能码10(十六进制)：写多个寄存器\n• Wireshark可解析工控协议流量包"}, {"title": "64. 流量包分析(PCAP)", "content": "使用Wireshark打开.pcap文件。\n分析步骤：\n• 过滤相关协议(Modbus/OPC UA)\n• 定位写入操作(Write)数据包\n• 展开Data层提取HEX数据\n• 解析工控协议格式获取实际数值"}, {"title": "65. DMZ(隔离区)", "content": "Demilitarized Zone。放置对外服务的服务器(Web/邮件/DNS)，同时与内网隔离。外网可访问DMZ，DMZ不能直接访问内网。"}, {"title": "66. 渗透测试必备", "content": "必须获得客户书面授权(授权书+保密协议)。未经授权的渗透测试=非法入侵。\n报告包含：漏洞详情+风险评级+修复建议。不是只记录漏洞。\n流程顺序：不是\"先漏洞扫描再签授权书\"——签授权书是第一步！"}, {"title": "67. 以下说法全部是错的(×)", "content": "① \"信息安全管理只需要关注技术层面\"——错(还需人员、流程、管理)\n② \"信息安全的本质是追求绝对安全，消除所有风险\"——错(本质是风险可接受)\n③ \"各级安全组织应该孤立工作，互不干涉\"——错(应协同工作)\n④ \"信息资产只包括数据和系统，不包括硬件和人员\"——错(信息资产包括硬件/软件/数据/人员/服务)\n⑤ \"企业构建ISMS无需考虑法律法规要求\"——错(必须考虑)\n⑥ \"《网络安全法》仅适用于政府机构，不适用企业\"——错(适用所有网络运营者)\n⑦ \"内部人员泄露信息只能由恶意行为导致，与疏忽无关\"——错(疏忽也是原因)\n⑧ \"风险评估只需要做一次\"——错(应定期开展)\n⑨ \"最小权限原则=用户拥有尽可能多权限\"——错(是拥有最少必需权限)\n⑩ \"可用性=防止信息被未经授权篡改\"——错(那是完整性！可用性=需要时能访问)\n⑪ \"机密性=确保信息随时可被授权者访问\"——错(那是可用性！机密性=防泄露)\n⑫ \"完整性=防止信息泄露给未授权者\"——错(那是机密性！完整性=防篡改)\n⑬ \"Check阶段是实施控制措施\"——错(那是Do阶段，Check=监控评审)\n⑭ \"购买保险属于风险接受\"——错(那是风险转移)\n⑮ \"所有风险都必须消除\"——错(低风险可以接受)"}, {"title": "68. 以下说法全部是对的(√)", "content": "① \"数字签名可以同时提供完整性和不可否认性\"——对\n② \"ISO 27001是国际公认的信息安全管理体系标准\"——对\n③ \"通过跨部门协作可以有效应对复杂的安全挑战\"——对\n④ \"《个人信息保护法》规定处理个人信息应遵循合法、正当、必要原则\"——对\n⑤ \"风险评估中风险值等于威胁概率乘以影响程度\"——对\n⑥ \"购买保险属于风险转移的处理方式\"——对\n⑦ \"《数据安全法》中，国家建立数据安全审查制度\"——对\n⑧ \"网络攻击是当前信息安全面临的最大威胁之一\"——对"}, {"title": "69. 主动信息收集 vs 被动信息收集", "content": "被动：公开渠道、不接触目标、隐蔽(不会被发现)→Google/Shodan/DNS查询\n主动：直接交互、扫描探测、更精准但留痕迹→端口扫描/漏洞扫描/目录探测\n★ 渗透测试人员应\"先被动、再主动\"——先用被动收集建立目标画像，获授权后主动探测补充验证。"}, {"title": "70. 文件上传漏洞渗透流程(套话模板)", "content": "信息收集(端口/目录扫描)→发现上传功能→测试文件类型限制→构造webshell(一句话木马)→尝试上传→如被拦截→绕过(改扩展名/Content-Type/文件头)→成功上传→蚁剑连接→获取权限→find / -name \"flag*\"→cat flag.txt→提交→清理痕迹→写报告。"}, {"title": "71. 工控流量分析流程(套话模板)", "content": "Wireshark打开pcap→过滤工控协议(Modbus)→定位Write指令→展开Data层→提取HEX数据→解析协议格式→计算转速值→定位超2000转的数据包→导出HEX作为flag。<br>============================================================<br>补充考点（根据2025考试卷+2026模拟卷遗漏补充）<br>以下内容为原手册未覆盖的考点，从2025考试卷、2026模拟卷、逐题详解中补充。"}, {"title": "RTO / RPO — 灾备恢复指标\n💡 一句话：RTO=最多容忍系统宕机多久（时间目标），RPO=最多容忍丢失多少数据（数据恢复点目标）。两个指标决定备份策略。\n📖 详细解释：RTO = Recovery Time Objective（恢复时间目标）：灾难发生后，业务系统必须在多长时间内恢复。RPO = Recovery Point Objective（恢复点目标）：灾难发生后，最多允许丢失多长时间内的数据。RTO=4小时：系统必须在4小时内恢复。RPO=1小时：最多丢失1小时内的数据（备份间隔≤1小时）。★ RTO/RPO是备份与灾备策略的核心指标，常考。", "content": "舍伍德安全架构模型（Sherwood）\n💡 一句话：将安全架构分为6个层次的理论模型，从物理层到业务层逐层覆盖。\n📖 详细解释：舍伍德安全架构模型将安全架构划分为6层：1.物理层（Physical） 2.网络层（Network） 3.系统层（System） 4.应用层（Application） 5.数据层（Data） 6.业务层（Business）。★ 与SABSA不同，SABSA是基于业务驱动的安全架构方法论，不是6层模型。"}, {"title": "ISA/IEC 62443 — 工控安全国际标准\n💡 一句话：工控系统（ICS/SCADA）信息安全的国际专用标准，由ISA和IEC联合发布。\n📖 详细解释：ISA/IEC 62443是工控安全领域最权威的国际标准。区别于：ISO 27001（通用信息安全管理体系）、NIST CSF（网络安全框架）。工控安全场景应优先参考ISA/IEC 62443。★ 2026模拟卷考了工控安全标准，答案是ISA/IEC 62443。", "content": "《党委（党组）网络安全工作责任制实施办法》\n💡 一句话：中国网络安全领域的党内重要法规，明确各级党委（党组）对网络安全工作的主体责任。\n📖 详细解释：核心要求：各级党委（党组）对本地区本部门网络安全工作负主体责任。发生重大网络安全事件时，应及时向上级报告。属于中国网络安全法律法规体系的重要组成部分（与《网络安全法》《数据安全法》《个人信息保护法》并列）。"}];
+var reciteState = {pool:[],currentIdx:0,memorized:{}};
+try{ var saved=localStorage.getItem('recite_memorized');if(saved)reciteState.memorized=JSON.parse(saved); }catch(e){}
+function saveMemorized(){ localStorage.setItem('recite_memorized',JSON.stringify(reciteState.memorized)); }
+
+document.querySelectorAll('.mode-tab').forEach(function(tab){
+  tab.addEventListener('click', function(){
+    var mode = tab.getAttribute('data-mode');
+    document.querySelectorAll('.mode-tab').forEach(function(t){t.classList.remove('active');t.style.color='var(--sub)';t.style.borderBottomColor='transparent';t.style.fontWeight='500'});
+    tab.classList.add('active');tab.style.color='var(--blue)';tab.style.borderBottomColor='var(--blue)';tab.style.fontWeight='600';
+    if(mode==='quiz'){
+      goHome();
+    } else {
+      document.getElementById('setup').style.display='none';
+      document.getElementById('sb').style.display='none';
+      document.getElementById('qa').innerHTML='';
+      document.getElementById('reciteSetup').style.display='block';
+      document.getElementById('reciteArea').style.display='none';
+    }
+  });
+});
+
+var reciteCursor = {}; // 记录每个filter的最后位置
+try{ var saved2=localStorage.getItem('recite_cursor');if(saved2)reciteCursor=JSON.parse(saved2); }catch(e){}
+function saveCursor(filter,pos){ reciteCursor[filter]=pos; localStorage.setItem('recite_cursor',JSON.stringify(reciteCursor)); }
+
+function startRecite(filter, resumePos){
+
+  var arr=[];
+  for(var i=0;i<RECITE_CARDS.length;i++){
+    if(filter==='unmemorized'&&reciteState.memorized[i])continue;
+    arr.push(i);
+  }
+  if(arr.length===0){alert(filter==='unmemorized'?'全部已背完！':'没有知识点');return;}
+  reciteState.pool=arr;
+  reciteState.currentIdx=(resumePos!==undefined)?resumePos:(reciteCursor[filter]||0);
+  if(reciteState.currentIdx>=arr.length) reciteState.currentIdx=0;
+  reciteState.currentFilter=filter;
+  document.getElementById('reciteSetup').style.display='none';
+  document.getElementById('reciteArea').style.display='block';
+  renderReciteCard();
+}
+
+function renderReciteCard(){
+  var pos=reciteState.currentIdx,total=reciteState.pool.length;
+  if(pos>=total){document.getElementById('reciteArea').innerHTML='<div class="card" style="text-align:center;padding:32px"><h3 style="font-size:20px">🎉 本组背诵完成！</h3><br><button class="btn-nxt" onclick="initRecite()">再来一组</button></div>';return;}
+  var ci=reciteState.pool[pos],card=RECITE_CARDS[ci],isMem=reciteState.memorized[ci];
+  var h='<div class="card">';
+  h+='<div class="num">知识点 '+(pos+1)+'/'+total+' · '+(isMem?'✅ 已背':'📖 未背')+'</div>';
+  h+='<div class="txt" style="font-size:18px">'+card.title+'</div>';
+  h+='<div style="font-size:14px;line-height:1.7;color:var(--text);margin:10px 0">'+card.content+'</div>';
+  var memBtn=isMem?'<button class="btn-nxt gray" onclick="toggleMem('+ci+')">↩ 取消已背</button>':'<button class="btn-nxt" style="background:var(--green)" onclick="toggleMem('+ci+')">✅ 已背过</button>';
+  h+='<div class="btn-row" style="flex-wrap:wrap">';
+  if(pos>0)h+='<button class="btn-nxt gray" onclick="goPrevRecite()">← 上一个</button>';
+  h+=memBtn;
+  if(pos<total-1)h+='<button class="btn-nxt" onclick="advanceRecite()">下一个 →</button>';
+  h+='<button class="btn-nxt outline" onclick="initRecite()">📋 返回列表</button></div></div>';
+  h+='<div style="display:flex;justify-content:center;gap:4px;flex-wrap:wrap;padding:8px 16px">';
+  for(var i=0;i<total;i++){var ci2=reciteState.pool[i];h+='<div style="width:8px;height:8px;border-radius:50%;background:'+(i<=pos?(reciteState.memorized[ci2]?'var(--green)':'var(--blue)'):(reciteState.memorized[ci2]?'var(--green)':'#D1D1D6'))+'"></div>';}
+  h+='</div>';
+  document.getElementById('reciteArea').innerHTML=h;
+}
+function advanceRecite(){reciteState.currentIdx++;saveCursor(reciteState.currentFilter,reciteState.currentIdx);renderReciteCard();}
+function goPrevRecite(){reciteState.currentIdx--;saveCursor(reciteState.currentFilter,reciteState.currentIdx);renderReciteCard();}
+function toggleMem(ci){if(reciteState.memorized[ci])delete reciteState.memorized[ci];else reciteState.memorized[ci]=true;saveMemorized();renderReciteCard();}
+
+function initRecite(){document.getElementById('reciteArea').style.display='none';document.getElementById('reciteSetup').style.display='block';}
+function showReciteList(){
+  document.getElementById('reciteArea').style.display='block';
+  var mc=Object.keys(reciteState.memorized).length,total=RECITE_CARDS.length,pct=Math.round(mc/total*100);
+  var h='<div class="card"><h3 style="text-align:center">📋 知识点清单</h3>';
+  h+='<div style="text-align:center;margin:8px 0;font-size:15px;color:var(--sub)">已背 '+mc+'/'+total+' ('+pct+'%)</div>';
+  h+='<div style="background:#E5E5EA;height:6px;border-radius:3px;margin:8px 0"><div style="background:var(--green);height:6px;border-radius:3px;width:'+pct+'%"></div></div>';
+  RECITE_CARDS.forEach(function(card,i){
+    var mem=reciteState.memorized[i];
+    h+='<div style="padding:12px;margin:4px 0;border-radius:10px;background:'+(mem?'#E8F8ED':'var(--bg)')+';cursor:pointer;display:flex;justify-content:space-between;align-items:center" onclick="startReciteCard('+i+')">';
+    h+='<span>'+(mem?'✅':'⬜')+' '+card.title+'</span><span style="font-size:12px;color:var(--sub)">→</span></div>';
+  });
+  h+='<br><button class="btn-nxt outline" onclick="initRecite()">🔙 返回</button></div>';
+  document.getElementById('reciteArea').innerHTML=h;
+}
+function startReciteCard(idx){reciteState.pool=[idx];reciteState.currentIdx=0;renderReciteCard();}
+
 </script>
 </body>
 </html>
