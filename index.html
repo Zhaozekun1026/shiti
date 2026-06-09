@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>首钢网络安全刷题</title>
+<style>
+:root {
+  --blue: #007AFF; --green: #34C759; --red: #FF3B30; --orange: #FF9500;
+  --bg: #F2F2F7; --card: #FFFFFF; --text: #1C1C1E; --sub: #8E8E93; --sep: #E5E5EA;
+  --radius: 14px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+  background: var(--bg); color: var(--text);
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none; user-select: none;
+  padding-bottom: env(safe-area-inset-bottom, 20px);
+}
+.header{
+  background: var(--card); padding: 14px 20px; text-align: center;
+  border-bottom: 0.5px solid var(--sep); position: sticky; top: 0; z-index: 10;
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+}
+.header h2{font-size:18px;font-weight:700;letter-spacing:-0.3px}
+.header .s{font-size:13px;color:var(--sub);margin-top:2px}
+#setup{margin:20px 16px;background:var(--card);border-radius:var(--radius);padding:24px 20px;text-align:center}
+#setup h3{font-size:20px;font-weight:700;margin-bottom:8px}
+.num-select{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:8px 0}
+.num-btn{
+  padding:10px 18px;border-radius:22px;border:none;background:var(--bg);
+  font-size:14px;font-weight:500;cursor:pointer;color:var(--text);
+  min-width:44px;min-height:44px;display:inline-flex;align-items:center;justify-content:center;
+}
+.num-btn.active{background:var(--blue);color:#fff}
+.btn-start{
+  display:block;width:100%;margin-top:20px;padding:15px;border-radius:26px;
+  background:var(--blue);color:#fff;font-size:17px;font-weight:600;
+  border:none;cursor:pointer;min-height:52px;
+}
+.num-btn:active,.btn-start:active{opacity:0.7}
+/* 统计面板 */
+.stats-bar{
+  display:flex;gap:8px;margin:12px 16px;
+}
+.stat-card{
+  flex:1;background:var(--card);border-radius:var(--radius);padding:14px 12px;text-align:center;
+}
+.stat-card .val{font-size:28px;font-weight:800;color:var(--blue);letter-spacing:-1px}
+.stat-card .lbl{font-size:12px;color:var(--sub);margin-top:2px}
+.stat-card .val.green{color:var(--green)}
+.stat-card .val.orange{color:var(--orange)}
+/* 卡片 */
+.card{
+  background:var(--card);margin:12px 16px;border-radius:var(--radius);padding:18px 16px;
+}
+.card .num{font-size:13px;color:var(--sub);font-weight:500}
+.card .txt{font-size:17px;font-weight:600;margin:10px 0 14px;line-height:1.45;letter-spacing:-0.2px}
+.opt{
+  display:flex;align-items:center;width:100%;padding:14px 16px;margin-bottom:8px;
+  border-radius:12px;background:var(--bg);font-size:16px;text-align:left;
+  cursor:pointer;transition:all 0.15s;border:2px solid transparent;
+  min-height:50px;line-height:1.3;position:relative;
+}
+.opt:active{transform:scale(0.98)}
+.opt.picked{background:#E8F0FE;border-color:var(--blue)}
+.opt.correct{background:#E8F8ED!important;border-color:var(--green)!important;color:#1B7A3D!important}
+.opt.wrong{background:#FFECEB!important;border-color:var(--red)!important;color:#C41E1A!important}
+.exp{
+  background:#FFF9E6;border-radius:10px;padding:12px 14px;margin-top:10px;
+  font-size:14px;line-height:1.55;color:#7A6100;display:none;
+}
+.exp.show{display:block}
+.multihint{font-size:13px;color:var(--blue);margin-bottom:10px;font-weight:500}
+/* 按钮 */
+.btn-row{display:flex;gap:10px;margin-top:14px}
+.btn-nxt{
+  display:inline-flex;align-items:center;justify-content:center;
+  padding:12px 24px;border-radius:22px;font-size:15px;font-weight:600;
+  cursor:pointer;border:none;background:var(--blue);color:#fff;
+  min-height:46px;min-width:60px;transition:opacity 0.2s;
+}
+.btn-nxt:active{opacity:0.7}
+.btn-nxt.outline{background:var(--card);color:var(--blue);border:1.5px solid var(--blue)}
+.btn-nxt.red{background:var(--red)}
+.btn-nxt.gray{background:var(--bg);color:var(--text)}
+/* 成绩 */
+.result-box{
+  background:var(--card);margin:20px 16px;border-radius:var(--radius);padding:28px 20px;text-align:center;
+}
+.result-box .score{font-size:72px;font-weight:800;color:var(--blue);letter-spacing:-3px;line-height:1}
+.result-box .sub{font-size:15px;color:var(--sub);margin:8px 0 4px}
+.result-box .stars{font-size:28px;margin:10px 0}
+.dot-row{display:flex;justify-content:center;gap:4px;flex-wrap:wrap;margin:8px 0;max-width:300px;margin-left:auto;margin-right:auto}
+.dot{width:7px;height:7px;border-radius:50%}
+.dot.g{background:var(--green)}.dot.r{background:var(--red)}
+/* 错题列表项 */
+.wrong-item{
+  background:var(--card);margin:8px 16px;padding:14px 16px;border-radius:12px;
+  border-left:4px solid var(--red);font-size:14px;cursor:pointer;
+}
+.section-title{font-size:18px;font-weight:700;padding:16px 16px 8px}
+</style>
+</head>
+<body>
+<div class="header">
+  <h2>🔒 首钢网络安全刷题</h2>
+  <div class="s">题库 187 题 · 粉笔模式</div>
+</div>
+
+<!-- 统计面板 -->
+<div id="statsPanel" style="display:none">
+  <div class="stats-bar">
+    <div class="stat-card"><div class="val" id="stToday">0</div><div class="lbl">今日刷题</div></div>
+    <div class="stat-card"><div class="val green" id="stTotal">0</div><div class="lbl">累计刷题</div></div>
+    <div class="stat-card"><div class="val orange" id="stRate">0%</div><div class="lbl">总正确率</div></div>
+  </div>
+</div>
+
+<div id="setup">
+  <h3>📝 选择每组题数</h3>
+  <div class="num-select">
+    <div class="num-btn" data-n="10">10题</div>
+    <div class="num-btn active" data-n="30">30题</div>
+    <div class="num-btn" data-n="50">50题</div>
+    <div class="num-btn" data-n="0">全部(187题)</div>
+  </div>
+  <button class="btn-start" id="btnStart">🚀 开始刷题</button>
+</div>
+
+<div id="qa"></div>
+<div id="sb" style="display:none"></div>
+
+<script>
+var ALL_Q = [{"q": "跨部门协作有效？（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 0, "exp": "正确答案：A. ✓ 正确"}, {"q": "Phishing利用？", "opts": ["系统漏洞", "社会工程学手段", "协议缺陷", "暴力破解"], "ans": 1, "exp": "正确答案：B. 社会工程学手段"}, {"q": "信息收集的方向包括？（多选）", "opts": ["服务器类型", "网站容器类型与版本", "用户密码", "后台目录"], "ans": [0, 1, 3], "exp": "正确答案：A. 服务器类型、B. 网站容器类型与版本、D. 后台目录"}, {"q": "ISO27002内容？", "opts": ["体系要求", "实践准则", "风险指南", "度量指标"], "ans": 1, "exp": "正确答案：B. 实践准则"}, {"q": "《关基条例》的制定依据是？", "opts": ["网络安全法", "数据安全法", "民法典", "刑法"], "ans": 0, "exp": "正确答案：A. 网络安全法"}, {"q": "企业构建ISMS无需考虑法律法规要求。（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 1, "exp": "正确答案：B. ✗ 错误"}, {"q": "OWASP Top 10是什么？", "opts": ["十大编程语言", "十大Web应用安全风险", "十大操作系统", "十大安全公司"], "ans": 1, "exp": "正确答案：B. 十大Web应用安全风险"}, {"q": "以下哪项不属于密码安全的最佳实践？", "opts": ["使用简单易记的密码", "定期更换密码", "启用多因素认证", "不使用相同密码多处登录"], "ans": 0, "exp": "正确答案：A. 使用简单易记的密码"}, {"q": "中国正式接入国际互联网是哪一年？", "opts": ["1990", "1994", "2000", "2008"], "ans": 1, "exp": "正确答案：B. 1994"}, {"q": "信息安全三要素包括？（多选）", "opts": ["机密性", "完整性", "可用性", "可扩展性"], "ans": [0, 1, 2], "exp": "正确答案：A. 机密性、B. 完整性、C. 可用性"}, {"q": "建立ISMS的关键成功因素？（多选）", "opts": ["明确的安全方针策略", "全员安全意识培训", "基于风险的资产保护", "有效的事件管理过程"], "ans": [0, 1, 2, 3], "exp": "正确答案：A. 明确的安全方针策略、B. 全员安全意识培训、C. 基于风险的资产保护、D. 有效的事件管理过程"}, {"q": "信息安全的本质是？", "opts": ["追求绝对安全", "消除所有风险", "将风险控制在可接受水平", "完全依赖技术"], "ans": 2, "exp": "正确答案：C. 将风险控制在可接受水平"}, {"q": "跨部门协作可以有效应对日益复杂的安全挑战。（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 0, "exp": "正确答案：A. ✓ 正确"}, {"q": "业务连续性信息安全控制措施？（多选）", "opts": ["信息安全连续性计划", "关键数据备份恢复", "建设备用数据中心", "风险评估与响应"], "ans": [0, 1, 2], "exp": "正确答案：A. 信息安全连续性计划、B. 关键数据备份恢复、C. 建设备用数据中心"}, {"q": "双因素认证(2FA)是指？", "opts": ["两个密码", "两种不同类型验证", "两台设备认证", "双重防火墙"], "ans": 1, "exp": "正确答案：B. 两种不同类型验证"}, {"q": "安全运营评价域子域包括？（多选）", "opts": ["网络安全运营", "信息安全运营", "安全统筹", "安全能力"], "ans": [0, 1], "exp": "正确答案：A. 网络安全运营、B. 信息安全运营"}, {"q": "数字签名可以同时提供完整性和不可否认性。（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 0, "exp": "正确答案：A. ✓ 正确"}, {"q": "VPN技术可以实现？", "opts": ["远程安全访问", "网络匿名", "数据压缩", "负载均衡"], "ans": 0, "exp": "正确答案：A. 远程安全访问"}, {"q": "信息安全的本质是追求绝对安全消除所有风险。（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 1, "exp": "正确答案：B. ✗ 错误"}, {"q": "网安法仅适用政府？（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 1, "exp": "正确答案：B. ✗ 错误"}, {"q": "CVE编号的含义？", "opts": ["漏洞利用代码", "漏洞唯一标识编码", "攻击工具编号", "安全标准编号"], "ans": 1, "exp": "正确答案：B. 漏洞唯一标识编码"}, {"q": "《个保法》跨境传输？", "opts": ["随意传输", "需安全评估/标准合同/认证", "完全禁止", "没要求"], "ans": 1, "exp": "正确答案：B. 需安全评估/标准合同/认证"}, {"q": "SSL/TLS作用？", "opts": ["防DDoS", "加密和身份认证", "加速", "防SQL注入"], "ans": 1, "exp": "正确答案：B. 加密和身份认证"}, {"q": "信息安全三层架构不包括哪种表述？", "opts": ["管理层技术层操作层", "决策层管理层执行层", "战略层战术层运营层", "以上表述均可"], "ans": 3, "exp": "正确答案：D. 以上表述均可"}, {"q": "网络攻击是当前信息安全面临的最大威胁之一。（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 0, "exp": "正确答案：A. ✓ 正确"}, {"q": "灾难恢复计划(DRP)主要关注？", "opts": ["日常安全运维", "重大灾难后恢复IT系统和业务", "员工安全意识培训", "软件版本管理"], "ans": 1, "exp": "正确答案：B. 重大灾难后恢复IT系统和业务"}, {"q": "等保2.0定级依据包括？（多选）", "opts": ["对公民权益损害程度", "对社会秩序损害程度", "对国家安全损害程度", "系统建设成本"], "ans": [0, 1, 2], "exp": "正确答案：A. 对公民权益损害程度、B. 对社会秩序损害程度、C. 对国家安全损害程度"}, {"q": "数字签名提供？", "opts": ["机密性和完整性", "完整性和不可否认性", "可用性和机密性", "完整性和可用性"], "ans": 1, "exp": "正确答案：B. 完整性和不可否认性"}, {"q": "保险是风险转移？（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 0, "exp": "正确答案：A. ✓ 正确"}, {"q": "phpStudy集成了哪种数据库？", "opts": ["Oracle", "SQL Server", "MySQL", "PostgreSQL"], "ans": 2, "exp": "正确答案：C. MySQL"}, {"q": "各级安全组织应该孤立工作互不干涉。（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 1, "exp": "正确答案：B. ✗ 错误"}, {"q": "ISMS测量的常用方法？", "opts": ["KPI和KRI", "仅问卷", "仅渗透测试", "仅日志审计"], "ans": 0, "exp": "正确答案：A. KPI和KRI"}, {"q": "安全事件分级的主要依据是？", "opts": ["事件发生的时间", "事件的影响范围和紧急程度", "事件名称", "事件发生的地点"], "ans": 1, "exp": "正确答案：B. 事件的影响范围和紧急程度"}, {"q": "DDoS攻击的目的是？", "opts": ["窃取用户密码", "耗尽服务器资源", "上传恶意文件", "篡改数据库内容"], "ans": 1, "exp": "正确答案：B. 耗尽服务器资源"}, {"q": "资产分类核心目的？", "opts": ["计数", "适当级别保护", "区分购买时间", "财务核算"], "ans": 1, "exp": "正确答案：B. 适当级别保护"}, {"q": "安全策略由谁定？", "opts": ["IT部门", "最高管理层", "普通员工", "外部顾问"], "ans": 1, "exp": "正确答案：B. 最高管理层"}, {"q": "下列哪项不是ISMS标准的常见认证？", "opts": ["ISO 27001", "ISO 27701", "ISO 22301", "ISO 9001"], "ans": 3, "exp": "正确答案：D. ISO 9001"}, {"q": "安全本质是绝对安全？（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 1, "exp": "正确答案：B. ✗ 错误"}, {"q": "《数据安全法》施行时间？", "opts": ["2017", "2019", "2021", "2023"], "ans": 2, "exp": "正确答案：C. 2021"}, {"q": "社会工程学攻击？", "opts": ["SQL注入", "DDoS", "冒充IT索要密码", "缓冲区溢出"], "ans": 2, "exp": "正确答案：C. 冒充IT索要密码"}, {"q": "内部人员泄露信息只能由恶意行为导致与疏忽无关。（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 1, "exp": "正确答案：B. ✗ 错误"}, {"q": "信息安全三层架构？", "opts": ["管理层技术层操作层", "决策层管理层执行层", "战略层战术层运营层", "以上均可"], "ans": 3, "exp": "正确答案：D. 以上均可"}, {"q": "安全管理只需技术？（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 1, "exp": "正确答案：B. ✗ 错误"}, {"q": "机密性是随时访问？（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 1, "exp": "正确答案：B. ✗ 错误"}, {"q": "信息安全管理的免疫系统比喻强调？", "opts": ["被动防御", "主动发现和响应", "事后恢复", "外部依赖"], "ans": 1, "exp": "正确答案：B. 主动发现和响应"}, {"q": "NIST网络安全框架2.0新增的核心功能是？", "opts": ["识别", "保护", "治理", "恢复"], "ans": 2, "exp": "正确答案：C. 治理"}, {"q": "不安全设计的缓冲区溢出属于？", "opts": ["Web安全漏洞", "系统级安全漏洞", "邮件安全", "数据库安全"], "ans": 1, "exp": "正确答案：B. 系统级安全漏洞"}, {"q": "以下哪项属于社会工程学攻击？", "opts": ["SQL注入", "DDoS", "冒充IT人员索要密码", "缓冲区溢出"], "ans": 2, "exp": "正确答案：C. 冒充IT人员索要密码"}, {"q": "下列哪项属于ISMS中的技术控制？", "opts": ["密码策略", "漏洞扫描", "事件响应计划", "业务连续性计划"], "ans": 1, "exp": "正确答案：B. 漏洞扫描"}, {"q": "DMZ的作用是？", "opts": ["加密数据", "隔离外网和内网", "加速网络", "存储备份"], "ans": 1, "exp": "正确答案：B. 隔离外网和内网"}, {"q": "资产仅数据系统？（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 1, "exp": "正确答案：B. ✗ 错误"}, {"q": "DRP关注？", "opts": ["日常运维", "灾难后恢复IT", "意识培训", "版本管理"], "ans": 1, "exp": "正确答案：B. 灾难后恢复IT"}, {"q": "ISMS范围？", "opts": ["所有系统", "部分系统", "整体或特定范围", "仅硬件"], "ans": 2, "exp": "正确答案：C. 整体或特定范围"}, {"q": "DNS解析过程中首先被查询的是？", "opts": ["本地hosts文件", "根服务器", "顶级域名服务器", "权威域名服务器"], "ans": 1, "exp": "正确答案：B. 根服务器"}, {"q": "下列哪项属于ISMS中的组织控制？", "opts": ["用户访问管理", "加密", "物理安全", "信息安全角色和责任定义"], "ans": 3, "exp": "正确答案：D. 信息安全角色和责任定义"}, {"q": "评估检查通常由哪个层级执行？", "opts": ["业务部门", "网络安全专业团队", "决策指挥层", "外部审计"], "ans": 1, "exp": "正确答案：B. 网络安全专业团队"}, {"q": "数据安全法有审查制度？（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 0, "exp": "正确答案：A. ✓ 正确"}, {"q": "ISMS无需考虑法律？（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 1, "exp": "正确答案：B. ✗ 错误"}, {"q": "内部人员泄露信息的原因？", "opts": ["仅疏忽", "仅恶意行为", "疏忽或恶意行为", "技术故障"], "ans": 2, "exp": "正确答案：C. 疏忽或恶意行为"}, {"q": "身份认证三因素不包括？", "opts": ["你知道的", "你拥有的", "你本身的", "你想要的"], "ans": 3, "exp": "正确答案：D. 你想要的"}, {"q": "信息安全三要素CIA不包括？", "opts": ["机密性", "完整性", "可用性", "可扩展性"], "ans": 3, "exp": "正确答案：D. 可扩展性"}, {"q": "《关基条例》中运营者应优先采购？", "opts": ["国外知名品牌", "安全可信的网安产品和服务", "价格最低的", "功能最复杂的"], "ans": 1, "exp": "正确答案：B. 安全可信的网安产品和服务"}, {"q": "等保2.0安全保护等级分为几级？", "opts": ["3级", "4级", "5级", "6级"], "ans": 2, "exp": "正确答案：C. 5级"}, {"q": "XSS攻击发生在哪个环境中？", "opts": ["数据库", "服务器", "客户端浏览器", "网络传输层"], "ans": 2, "exp": "正确答案：C. 客户端浏览器"}, {"q": "机密性是指确保信息随时可被授权者访问的能力。（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 1, "exp": "正确答案：B. ✗ 错误"}, {"q": "《网络安全法》要求措施不包括？", "opts": ["数据分类", "重要数据备份", "加密措施", "无需采取任何措施"], "ans": 3, "exp": "正确答案：D. 无需采取任何措施"}, {"q": "哪个框架以识别/保护/检测/响应/恢复五大核心功能著称？", "opts": ["ISO 27001", "NIST CSF", "TOGAF", "SABSA"], "ans": 1, "exp": "正确答案：B. NIST CSF"}, {"q": "ISO 27001的核心作用是？", "opts": ["仅规定技术防护", "提供建立ISMS的框架", "定义软件编码规范", "仅适用政府部门"], "ans": 1, "exp": "正确答案：B. 提供建立ISMS的框架"}, {"q": "最高安全指导文件？", "opts": ["安全策略", "操作手册", "审计报告", "培训计划"], "ans": 0, "exp": "正确答案：A. 安全策略"}, {"q": "ISMS测量的常用方法是？", "opts": ["KPI和KRI", "仅问卷调查", "仅渗透测试", "仅日志审计"], "ans": 0, "exp": "正确答案：A. KPI和KRI"}, {"q": "渗透测试正确说法是？", "opts": ["可以不经授权进行", "报告只需记录漏洞", "应获得书面授权后进行", "等同于漏洞扫描"], "ans": 2, "exp": "正确答案：C. 应获得书面授权后进行"}, {"q": "ISO 27001是国际公认的信息安全管理体系标准。（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 0, "exp": "正确答案：A. ✓ 正确"}, {"q": "防火墙位置？", "opts": ["应用层", "网络层", "物理层", "传输层"], "ans": 1, "exp": "正确答案：B. 网络层"}, {"q": "访问控制列表对应？", "opts": ["身份认证", "访问授权", "ACL", "访问审计"], "ans": 2, "exp": "正确答案：C. ACL"}, {"q": "信息资产包括？", "opts": ["仅数据", "仅硬件", "仅软件", "硬件软件数据人员服务等"], "ans": 3, "exp": "正确答案：D. 硬件软件数据人员服务等"}, {"q": "中国接入互联网？", "opts": ["1990", "1994", "2000", "2008"], "ans": 1, "exp": "正确答案：B. 1994"}, {"q": "漏洞扫描作用？", "opts": ["利用漏洞", "识别已知漏洞", "阻止攻击", "加密数据"], "ans": 1, "exp": "正确答案：B. 识别已知漏洞"}, {"q": "信息安全事件管理的核心目标是？", "opts": ["杜绝所有事件发生", "采用一致有效的方法管理事件", "仅记录不处理", "只由技术部门负责"], "ans": 1, "exp": "正确答案：B. 采用一致有效的方法管理事件"}, {"q": "安全事件分级依据？", "opts": ["时间", "影响范围和紧急程度", "名称", "地点"], "ans": 1, "exp": "正确答案：B. 影响范围和紧急程度"}, {"q": "PDCA Check是实施？（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 1, "exp": "正确答案：B. ✗ 错误"}, {"q": "信息资产只包括数据和系统不包括硬件和人员。（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 1, "exp": "正确答案：B. ✗ 错误"}, {"q": "HTTPS协议默认使用的端口是？", "opts": ["80", "443", "8080", "8443"], "ans": 1, "exp": "正确答案：B. 443"}, {"q": "关基条例依据？", "opts": ["网安法", "数据安全法", "民法典", "刑法"], "ans": 0, "exp": "正确答案：A. 网安法"}, {"q": "双因素认证(2FA)是指？", "opts": ["使用两个密码", "使用两种不同类型的验证方式", "两台设备同时认证", "双重防火墙保护"], "ans": 1, "exp": "正确答案：B. 使用两种不同类型的验证方式"}, {"q": "网络钓鱼(Phishing)攻击主要利用？", "opts": ["系统漏洞", "社会工程学手段", "网络协议缺陷", "密码暴力破解"], "ans": 1, "exp": "正确答案：B. 社会工程学手段"}, {"q": "ISO27001核心作用？", "opts": ["仅规定技术防护", "提供建立ISMS的框架", "定义软件编码规范", "仅适用政府部门"], "ans": 1, "exp": "正确答案：B. 提供建立ISMS的框架"}, {"q": "关于风险处置正确的是？", "opts": ["所有风险都必须消除", "风险转移意味着风险消失", "风险接受是对低风险的处置方式", "风险规避就是买保险"], "ans": 2, "exp": "正确答案：C. 风险接受是对低风险的处置方式"}, {"q": "下列哪项是ISMS审核员的常见资格？", "opts": ["CISA", "CISSP", "ISO 27001主任审核员", "以上都是"], "ans": 3, "exp": "正确答案：D. 以上都是"}, {"q": "PDCA中Check阶段主要是实施控制措施。（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 1, "exp": "正确答案：B. ✗ 错误"}, {"q": "ICS安全不包括？", "opts": ["知识产权", "生产连续性", "提高工资", "法规要求"], "ans": 2, "exp": "正确答案：C. 提高工资"}, {"q": "企业信息安全策略应由哪个层级制定？", "opts": ["IT部门", "最高管理层", "普通员工", "外部顾问"], "ans": 1, "exp": "正确答案：B. 最高管理层"}, {"q": "应急响应的首要目标是？", "opts": ["找到攻击者", "恢复业务连续性", "起诉攻击者", "升级系统补丁"], "ans": 1, "exp": "正确答案：B. 恢复业务连续性"}, {"q": "风险评估中风险值等于威胁概率乘以影响程度。（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 0, "exp": "正确答案：A. ✓ 正确"}, {"q": "TCP三次握手？", "opts": ["SYN->SYN-ACK->ACK", "SYN->ACK->SYN-ACK", "ACK->SYN->SYN-ACK", "SYN-ACK->SYN->ACK"], "ans": 0, "exp": "正确答案：A. SYN->SYN-ACK->ACK"}, {"q": "可用性是指防止信息被未经授权篡改的能力。（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 1, "exp": "正确答案：B. ✗ 错误"}, {"q": "BS 7799是什么？", "opts": ["信息安全建设指南", "英国标准", "ISO 27001的前身", "以上都是"], "ans": 3, "exp": "正确答案：D. 以上都是"}, {"q": "下列哪项不属于物理与环境安全的控制措施？", "opts": ["设备安置保护", "门禁系统", "恶意代码防范", "消防系统"], "ans": 2, "exp": "正确答案：C. 恶意代码防范"}, {"q": "OWASP Top 10是？", "opts": ["十大编程语言", "十大Web安全风险", "十大操作系统", "十大安全公司"], "ans": 1, "exp": "正确答案：B. 十大Web安全风险"}, {"q": "非物理安全措施？", "opts": ["设备安置", "门禁", "恶意代码防范", "消防"], "ans": 2, "exp": "正确答案：C. 恶意代码防范"}, {"q": "CIA三要素包括？", "opts": ["机密性完整性可用性", "保密性不可否认性可控性", "认证授权审计", "预防检测响应"], "ans": 0, "exp": "正确答案：A. 机密性完整性可用性"}, {"q": "渗透测试必须先？", "opts": ["直接扫描", "获得书面授权", "开始攻击", "写报告"], "ans": 1, "exp": "正确答案：B. 获得书面授权"}, {"q": "网络安全法施行时间？", "opts": ["2016", "2017", "2018", "2019"], "ans": 1, "exp": "正确答案：B. 2017"}, {"q": "信息管理被比喻为数字时代的什么？", "opts": ["防火墙", "免疫系统", "杀毒软件", "入侵检测系统"], "ans": 1, "exp": "正确答案：B. 免疫系统"}, {"q": "防止内部数据泄露的有效措施是？", "opts": ["仅在网络边界部署防火墙", "部署DLP数据防泄露系统", "关闭所有USB接口", "禁止员工上网"], "ans": 1, "exp": "正确答案：B. 部署DLP数据防泄露系统"}, {"q": "访问控制中明确用户可访问资源对应？", "opts": ["身份认证", "访问授权", "访问控制列表", "访问审计"], "ans": 2, "exp": "正确答案：C. 访问控制列表"}, {"q": "ISMS范围可定义为？", "opts": ["只能是所有信息系统", "只能是部分信息系统", "组织整体或特定范围", "仅包含硬件设备"], "ans": 2, "exp": "正确答案：C. 组织整体或特定范围"}, {"q": "渗透测试前期准备阶段包括？", "opts": ["漏洞扫描", "签署授权书及保密协议", "痕迹擦除", "报告输出"], "ans": 1, "exp": "正确答案：B. 签署授权书及保密协议"}, {"q": "SSL/TLS协议的主要作用是？", "opts": ["防止DDoS", "为网络通信提供加密和身份认证", "加速网络传输", "防止SQL注入"], "ans": 1, "exp": "正确答案：B. 为网络通信提供加密和身份认证"}, {"q": "关于纵深防御策略理解正确的是？", "opts": ["只在网络边界部署安全措施", "多层次多手段的安全防护", "只依赖一种安全产品", "只需要技术防护"], "ans": 1, "exp": "正确答案：B. 多层次多手段的安全防护"}, {"q": "保证信息系统可用性通常采用？", "opts": ["加密技术", "数字签名", "备份和容灾", "访问控制"], "ans": 2, "exp": "正确答案：C. 备份和容灾"}, {"q": "下列哪项属于常见的网络攻击类型？", "opts": ["SQL注入", "社会工程学", "分布式拒绝服务", "以上都是"], "ans": 3, "exp": "正确答案：D. 以上都是"}, {"q": "中美黑客大战发生在？", "opts": ["门户攻击时代", "网络蠕虫时代", "僵尸木马时代", "数据算法时代"], "ans": 0, "exp": "正确答案：A. 门户攻击时代"}, {"q": "数字签名可以同时提供？", "opts": ["机密性和完整性", "完整性和不可否认性", "可用性和机密性", "完整性和可用性"], "ans": 1, "exp": "正确答案：B. 完整性和不可否认性"}, {"q": "TCP三次握手的正确顺序是？", "opts": ["SYN->SYN-ACK->ACK", "SYN->ACK->SYN-ACK", "ACK->SYN->SYN-ACK", "SYN-ACK->SYN->ACK"], "ans": 0, "exp": "正确答案：A. SYN->SYN-ACK->ACK"}, {"q": "《数据安全法》中，国家建立数据安全审查制度。（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 0, "exp": "正确答案：A. ✓ 正确"}, {"q": "非密码最佳实践？", "opts": ["简单易记密码", "定期更换", "多因素认证", "不同密码"], "ans": 0, "exp": "正确答案：A. 简单易记密码"}, {"q": "渗透测试前期？", "opts": ["漏洞扫描", "签授权保密协议", "擦痕迹", "写报告"], "ans": 1, "exp": "正确答案：B. 签授权保密协议"}, {"q": "《个人信息保护法》中敏感个人信息包括？", "opts": ["姓名", "性别", "生物识别信息", "工作单位"], "ans": 2, "exp": "正确答案：C. 生物识别信息"}, {"q": "《网络安全法》要求措施？", "opts": ["数据分类", "备份", "加密", "以上都是"], "ans": 3, "exp": "正确答案：D. 以上都是"}, {"q": "完整性是指防止信息泄露给未授权者的能力。（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 1, "exp": "正确答案：B. ✗ 错误"}, {"q": "信息安全管理只需要关注技术层面，不需要考虑人员和管理因素。（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 1, "exp": "正确答案：B. ✗ 错误"}, {"q": "纵深防御是？", "opts": ["单层防御", "多层多手段防护", "只靠防火墙", "只靠加密"], "ans": 1, "exp": "正确答案：B. 多层多手段防护"}, {"q": "信息资产包括？", "opts": ["仅数据", "仅硬件", "仅软件", "硬件软件数据人员服务"], "ans": 3, "exp": "正确答案：D. 硬件软件数据人员服务"}, {"q": "购买保险属于风险转移的处理方式。（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 0, "exp": "正确答案：A. ✓ 正确"}, {"q": "IBM CBBM方法中，组件是指？", "opts": ["软件模块", "业务流程中的可管理单元", "硬件设备", "数据库表"], "ans": 1, "exp": "正确答案：B. 业务流程中的可管理单元"}, {"q": "各级组织应孤立？（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 1, "exp": "正确答案：B. ✗ 错误"}, {"q": "《个人信息保护法》规定处理个人信息应遵循合法正当必要原则。（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 0, "exp": "正确答案：A. ✓ 正确"}, {"q": "防范网络钓鱼的有效措施？（多选）", "opts": ["启用多因素认证", "部署邮件安全网关", "开展安全意识培训", "使用简单密码"], "ans": [0, 1, 2], "exp": "正确答案：A. 启用多因素认证、B. 部署邮件安全网关、C. 开展安全意识培训"}, {"q": "0day漏洞？", "opts": ["已修补", "官方未公布补丁", "超过一年", "不影响安全"], "ans": 1, "exp": "正确答案：B. 官方未公布补丁"}, {"q": "基线核查的主要目的是？", "opts": ["发现高级威胁", "确认系统配置符合安全基准", "修复安全漏洞", "提高系统性能"], "ans": 1, "exp": "正确答案：B. 确认系统配置符合安全基准"}, {"q": "信息资产分类的核心目的是？", "opts": ["便于资产计数", "确保信息受到适当级别的保护", "区分资产购买时间", "仅用于财务核算"], "ans": 1, "exp": "正确答案：B. 确保信息受到适当级别的保护"}, {"q": "phpStudy数据库？", "opts": ["Oracle", "SQL Server", "MySQL", "PostgreSQL"], "ans": 2, "exp": "正确答案：C. MySQL"}, {"q": "等保2.0等级？", "opts": ["3级", "4级", "5级", "6级"], "ans": 2, "exp": "正确答案：C. 5级"}, {"q": "PDCA循环中Plan阶段的主要工作是？", "opts": ["实施控制措施", "监控和评审", "建立目标和过程", "纠正和改进"], "ans": 2, "exp": "正确答案：C. 建立目标和过程"}, {"q": "安全事件管理目标？", "opts": ["杜绝事件", "一致有效方法管理", "仅记录", "仅技术"], "ans": 1, "exp": "正确答案：B. 一致有效方法管理"}, {"q": "无内部DLP方案？", "opts": ["仅边界防火墙", "部署DLP系统", "关USB", "禁上网"], "ans": 0, "exp": "正确答案：A. 仅边界防火墙"}, {"q": "可用性是防篡改？（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 1, "exp": "正确答案：B. ✗ 错误"}, {"q": "安全成熟度3级？", "opts": ["基础被动", "计划控制", "体系规范", "积极优化"], "ans": 2, "exp": "正确答案：C. 体系规范"}, {"q": "低风险处置？", "opts": ["必须消除", "转移即消失", "接受", "买保险"], "ans": 2, "exp": "正确答案：C. 接受"}, {"q": "PDCA制定ISMS？", "opts": ["Plan", "Do", "Check", "Act"], "ans": 0, "exp": "正确答案：A. Plan"}, {"q": "风险处置不包括？", "opts": ["规避", "降低", "转移", "消除"], "ans": 3, "exp": "正确答案：D. 消除"}, {"q": "PDCA中制定ISMS策略属于？", "opts": ["Plan计划", "Do执行", "Check检查", "Act处理"], "ans": 0, "exp": "正确答案：A. Plan计划"}, {"q": "建立信息安全管理制度首先要做？", "opts": ["采购安全设备", "明确安全方针和目标", "配置防火墙规则", "培训员工"], "ans": 1, "exp": "正确答案：B. 明确安全方针和目标"}, {"q": "信息安全管理体系中的人员控制包括？", "opts": ["背景调查", "安全培训", "保密协议", "以上都是"], "ans": 3, "exp": "正确答案：D. 以上都是"}, {"q": "网安法要求的安全保护义务包括？（多选）", "opts": ["制定内部安全管理制度", "防范病毒技术措施", "监测记录网络状态", "数据分类备份加密"], "ans": [0, 1, 2, 3], "exp": "正确答案：A. 制定内部安全管理制度、B. 防范病毒技术措施、C. 监测记录网络状态、D. 数据分类备份加密"}, {"q": "HTTPS端口？", "opts": ["80", "443", "8080", "8443"], "ans": 1, "exp": "正确答案：B. 443"}, {"q": "ISO27001国际公认？（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 0, "exp": "正确答案：A. ✓ 正确"}, {"q": "关于安全审计日志正确说法是？", "opts": ["日志可有可无", "日志应定期审查并安全存储", "日志可以随意删除", "日志仅用于性能分析"], "ans": 1, "exp": "正确答案：B. 日志应定期审查并安全存储"}, {"q": "安全审计日志？", "opts": ["可有可无", "定期审查并安全存储", "可随意删除", "仅性能分析"], "ans": 1, "exp": "正确答案：B. 定期审查并安全存储"}, {"q": "以下哪项属于被动信息收集方式？", "opts": ["端口扫描", "直接访问目标网站", "使用Google搜索公开信息", "发送探测请求包"], "ans": 2, "exp": "正确答案：C. 使用Google搜索公开信息"}, {"q": "安全基线是？", "opts": ["最高标准", "最低标准", "可选建议", "攻击工具"], "ans": 1, "exp": "正确答案：B. 最低标准"}, {"q": "数字签名正确？（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 0, "exp": "正确答案：A. ✓ 正确"}, {"q": "安全事件管理第一步？", "opts": ["响应", "恢复", "检测与报告", "总结"], "ans": 2, "exp": "正确答案：C. 检测与报告"}, {"q": "安全运营域中资产清单管理对应？", "opts": ["全面识别并分类分级管理资产", "安全风险评估", "漏洞管理", "威胁情报管理"], "ans": 0, "exp": "正确答案：A. 全面识别并分类分级管理资产"}, {"q": "泄露仅恶意导致？（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 1, "exp": "正确答案：B. ✗ 错误"}, {"q": "DDoS目的？", "opts": ["窃取密码", "耗尽资源", "上传文件", "篡改数据库"], "ans": 1, "exp": "正确答案：B. 耗尽资源"}, {"q": "最小权限越多越好？（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 1, "exp": "正确答案：B. ✗ 错误"}, {"q": "SIEM的功能是？", "opts": ["阻止攻击", "集中收集和分析安全日志", "加密数据", "备份数据"], "ans": 1, "exp": "正确答案：B. 集中收集和分析安全日志"}, {"q": "完整性是防泄露？（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 1, "exp": "正确答案：B. ✗ 错误"}, {"q": "风险处置四种方式不包括？", "opts": ["规避", "降低", "转移", "消除"], "ans": 3, "exp": "正确答案：D. 消除"}, {"q": "XSS攻击环境？", "opts": ["数据库", "服务器", "客户端浏览器", "传输层"], "ans": 2, "exp": "正确答案：C. 客户端浏览器"}, {"q": "《网络安全法》正式施行时间是？", "opts": ["2016年", "2017年", "2018年", "2019年"], "ans": 1, "exp": "正确答案：B. 2017年"}, {"q": "安全成熟度3级的描述是？", "opts": ["基础被动", "计划控制", "体系规范", "积极优化"], "ans": 2, "exp": "正确答案：C. 体系规范"}, {"q": "最小权限原则是指用户应该拥有尽可能多的权限。（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 1, "exp": "正确答案：B. ✗ 错误"}, {"q": "《网络安全法》仅适用于政府机构不适用于普通企业。（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 1, "exp": "正确答案：B. ✗ 错误"}, {"q": "渗透测试常见阶段包括？（多选）", "opts": ["信息收集", "漏洞分析", "漏洞利用", "报告输出"], "ans": [0, 1, 2, 3], "exp": "正确答案：A. 信息收集、B. 漏洞分析、C. 漏洞利用、D. 报告输出"}, {"q": "购买保险属于哪种风险处置方式？", "opts": ["风险接受", "风险降低", "风险转移", "风险规避"], "ans": 2, "exp": "正确答案：C. 风险转移"}, {"q": "内部泄露原因？", "opts": ["仅疏忽", "仅恶意", "疏忽或恶意", "技术故障"], "ans": 2, "exp": "正确答案：C. 疏忽或恶意"}, {"q": "ICS安全重要性不包括？", "opts": ["保护知识产权", "维护生产连续性", "提高员工工资", "遵守法规要求"], "ans": 2, "exp": "正确答案：C. 提高员工工资"}, {"q": "信息安全核心管理要素包括？（多选）", "opts": ["人员", "技术", "流程", "组织架构"], "ans": [0, 1, 2, 3], "exp": "正确答案：A. 人员、B. 技术、C. 流程、D. 组织架构"}, {"q": "处理信息合法正当必要？（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 0, "exp": "正确答案：A. ✓ 正确"}, {"q": "风险值=威胁×影响？（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 0, "exp": "正确答案：A. ✓ 正确"}, {"q": "建立ISMS首先要？", "opts": ["采购设备", "明确安全方针和目标", "配防火墙", "培训员工"], "ans": 1, "exp": "正确答案：B. 明确安全方针和目标"}, {"q": "信息安全管理的目标是实现？", "opts": ["零风险", "绝对安全", "风险可接受", "完全合规"], "ans": 2, "exp": "正确答案：C. 风险可接受"}, {"q": "最小权限原则是指？", "opts": ["用户拥有所有权限", "用户拥有其工作所需的最小权限", "管理员拥有最小权限", "系统拥有最小权限"], "ans": 1, "exp": "正确答案：B. 用户拥有其工作所需的最小权限"}, {"q": "中美黑客大战时期？", "opts": ["门户攻击时代", "蠕虫时代", "木马时代", "数据算法时代"], "ans": 0, "exp": "正确答案：A. 门户攻击时代"}, {"q": "等保2.0性质？", "opts": ["国际标准", "我国国标", "仅金融", "等于NIST"], "ans": 1, "exp": "正确答案：B. 我国国标"}, {"q": "DNS先查？", "opts": ["hosts", "根服务器", "顶级域", "权威"], "ans": 1, "exp": "正确答案：B. 根服务器"}, {"q": "被动信息收集？", "opts": ["端口扫描", "直接访问", "Google搜索", "探测包"], "ans": 2, "exp": "正确答案：C. Google搜索"}, {"q": "下列哪个模型是网络安全成熟度模型？", "opts": ["C2M2", "TOGAF", "SABSA", "MSF"], "ans": 0, "exp": "正确答案：A. C2M2"}, {"q": "安全运营资产清单？", "opts": ["资产管理", "风险评估", "漏洞管理", "威胁情报"], "ans": 0, "exp": "正确答案：A. 资产管理"}, {"q": "《个人信息保护法》中处理个人信息的核心原则是？", "opts": ["合法正当必要", "快速便捷低成本", "公开透明授权", "准确完整安全"], "ans": 0, "exp": "正确答案：A. 合法正当必要"}, {"q": "官方未公布补丁的漏洞被称为？", "opts": ["1day", "0day", "Exploit", "Backdoor"], "ans": 1, "exp": "正确答案：B. 0day"}, {"q": "ISO27002的核心内容是？", "opts": ["信息安全管理体系要求", "信息安全管理实践准则", "信息安全风险管理指南", "信息安全度量指标"], "ans": 1, "exp": "正确答案：B. 信息安全管理实践准则"}, {"q": "等保2.0的性质是？", "opts": ["国际通用标准", "我国信息安全保护的国家标准", "仅适用于金融行业", "等同于NIST CSF"], "ans": 1, "exp": "正确答案：B. 我国信息安全保护的国家标准"}, {"q": "漏洞扫描的主要作用是？", "opts": ["利用漏洞攻击", "识别系统中存在的已知安全漏洞", "实时阻止网络攻击", "对数据进行加密"], "ans": 1, "exp": "正确答案：B. 识别系统中存在的已知安全漏洞"}, {"q": "《数据安全法》规定数据交易中介服务机构需履行？", "opts": ["无需资质", "报告义务", "登记义务", "审查义务"], "ans": 3, "exp": "正确答案：D. 审查义务"}];
+
+// ===== 持久化统计（localStorage）=====
+var STATS_KEY = 'quiz_stats_v2';
+function loadStats(){
+  try {
+    var s = localStorage.getItem(STATS_KEY);
+    if(s) return JSON.parse(s);
+  } catch(e){}
+  return {today:'', doneToday:0, doneTotal:0, correctTotal:0};
+}
+function saveStats(st){
+  localStorage.setItem(STATS_KEY, JSON.stringify(st));
+}
+function updateStatsDisplay(){
+  var st = loadStats();
+  var today = new Date().toDateString();
+  if(st.today !== today){ st.today = today; st.doneToday = 0; saveStats(st); }
+  document.getElementById('stToday').textContent = st.doneToday;
+  document.getElementById('stTotal').textContent = st.doneTotal;
+  var rate = st.doneTotal>0 ? Math.round(st.correctTotal/st.doneTotal*100) : 0;
+  document.getElementById('stRate').textContent = rate+'%';
+  document.getElementById('statsPanel').style.display = 'block';
+}
+function recordRound(total, correct){
+  var st = loadStats();
+  var today = new Date().toDateString();
+  if(st.today !== today){ st.today = today; st.doneToday = 0; }
+  st.doneToday += total;
+  st.doneTotal += total;
+  st.correctTotal += correct;
+  saveStats(st);
+  updateStatsDisplay();
+}
+
+var state = {
+  roundSize: 30, pool: [], currentIdx: 0,
+  multiPicks: {}, answers: {}, wrongSet: new Set(), finished: false,
+  mode: 'normal'  // 'normal' | 'review' (错题翻页模式)
+};
+
+// 初始化
+document.querySelectorAll('.num-btn').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    document.querySelectorAll('.num-btn').forEach(function(b){b.classList.remove('active')});
+    btn.classList.add('active');
+    state.roundSize = parseInt(btn.getAttribute('data-n'));
+  });
+});
+document.getElementById('btnStart').addEventListener('click', startRound);
+updateStatsDisplay();
+
+function startRound(){
+  state.mode = 'normal';
+  var n = state.roundSize || ALL_Q.length;
+  if(n===0) n = ALL_Q.length;
+  var arr = [];
+  for(var i=0;i<ALL_Q.length;i++) arr.push(i);
+  for(var i=arr.length-1;i>0;i--){
+    var j=Math.floor(Math.random()*(i+1));
+    var tmp=arr[i];arr[i]=arr[j];arr[j]=tmp;
+  }
+  state.pool = arr.slice(0, Math.min(n, ALL_Q.length));
+  state.currentIdx = 0;
+  state.multiPicks = {};
+  state.answers = {};
+  state.finished = false;
+  document.getElementById('setup').style.display='none';
+  document.getElementById('sb').style.display='none';
+  renderCard();
+}
+
+function renderCard(){
+  var pos = state.currentIdx;
+  var total = state.pool.length;
+  if(pos >= total){
+    if(state.mode === 'review'){ showWrongBook(); return; }
+    showResult(); return;
+  }
+  var qid = state.pool[pos];
+  var q = ALL_Q[qid];
+  var isMulti = Array.isArray(q.ans);
+  var picks = state.multiPicks[qid] || [];
+  var hasPicked = picks.length > 0;
+  var isReview = state.mode === 'review';
+
+  var h = '<div class="card">';
+  h += '<div class="num">'+(isReview?'错题回顾 ':'')+'第'+(pos+1)+'/'+total+'题 题库#'+(qid+1)+'</div>';
+  if(isMulti && !isReview) h += '<div class="multihint">🔢 多选题 · 选好后点下一题</div>';
+  h += '<div class="txt">'+q.q+'</div>';
+
+  q.opts.forEach(function(o,i){
+    var cls = 'opt';
+    if(isReview){
+      // 错题翻页：标注对错
+      if(isMulti){
+        if(q.ans.indexOf(i)>=0 && picks.indexOf(i)>=0) cls += ' correct';
+        else if(q.ans.indexOf(i)>=0) cls += ' correct';
+        else if(picks.indexOf(i)>=0) cls += ' wrong';
+      } else {
+        if(i===q.ans) cls += ' correct';
+        else if(picks[0]===i) cls += ' wrong';
+      }
+      h += '<div class="'+cls+'">'+String.fromCharCode(65+i)+'. '+o+'</div>';
+    } else {
+      // 正常刷题：高亮选中
+      if(isMulti && picks.indexOf(i)>=0) cls += ' picked';
+      if(!isMulti && picks[0]===i) cls += ' picked';
+      h += '<div class="'+cls+'" data-opt="'+i+'">'+String.fromCharCode(65+i)+'. '+o+'</div>';
+    }
+  });
+
+  if(isReview){
+    var userAns = isMulti ? picks.map(function(p){return String.fromCharCode(65+p)}).join('') : (picks.length>0?String.fromCharCode(65+picks[0]):'未作答');
+    var correctAns = isMulti ? q.ans.map(function(a){return String.fromCharCode(65+a)}).join('') : String.fromCharCode(65+q.ans);
+    h += '<div style="margin-top:8px;font-size:13px;color:var(--red)">你的答案：'+userAns+' | 正确答案：'+correctAns+'</div>';
+    h += '<div class="exp show">💡 '+q.exp+'</div>';
+    h += '<div class="btn-row">';
+    if(pos > 0) h += '<button class="btn-nxt gray" id="btnPrev">← 上一题</button>';
+    if(pos < total-1) h += '<button class="btn-nxt" id="btnNext">下一题 →</button>';
+    h += '<button class="btn-nxt outline" id="btnBackList">📋 返回列表</button>';
+    h += '</div>';
+  } else {
+    if(hasPicked){
+      h += '<div class="btn-row">';
+      if(pos > 0) h += '<button class="btn-nxt gray" id="btnPrev">← 上一题</button>';
+      if(pos < total-1) h += '<button class="btn-nxt" id="btnNext">下一题 →</button>';
+      else h += '<button class="btn-nxt" id="btnSubmit" style="background:var(--green)">✅ 交卷</button>';
+      h += '</div>';
+    }
+  }
+  h += '</div>';
+
+  // 题号导航点
+  h += '<div style="display:flex;justify-content:center;gap:4px;flex-wrap:wrap;padding:8px 16px">';
+  for(var i=0;i<total;i++){
+    var c = (i===pos) ? 'var(--blue)' : ((state.multiPicks[state.pool[i]]&&state.multiPicks[state.pool[i]].length>0)?'var(--green)':'#D1D1D6');
+    h += '<div style="width:8px;height:8px;border-radius:50%;background:'+c+'"></div>';
+  }
+  h += '</div>';
+
+  document.getElementById('qa').innerHTML = h;
+  document.getElementById('sb').style.display='none';
+
+  if(!isReview){
+    document.querySelectorAll('.opt[data-opt]').forEach(function(el){
+      el.addEventListener('click', function(){
+        var optIdx = parseInt(el.getAttribute('data-opt'));
+        if(isMulti){
+          var arr = state.multiPicks[qid] || [];
+          if(!state.multiPicks[qid]) state.multiPicks[qid]=arr;
+          var idx = arr.indexOf(optIdx);
+          if(idx>=0) arr.splice(idx,1);
+          else arr.push(optIdx);
+        } else {
+          state.multiPicks[qid] = [optIdx];
+        }
+        renderCard();
+      });
+    });
+    var nxt = document.getElementById('btnNext');
+    if(nxt) nxt.addEventListener('click', function(){ state.currentIdx++; renderCard(); });
+    var prv = document.getElementById('btnPrev');
+    if(prv) prv.addEventListener('click', function(){ state.currentIdx--; renderCard(); });
+    var sub = document.getElementById('btnSubmit');
+    if(sub) sub.addEventListener('click', function(){ state.currentIdx = total; renderCard(); });
+  } else {
+    // 错题翻页模式
+    var bnxt = document.getElementById('btnNext');
+    if(bnxt) bnxt.addEventListener('click', function(){ state.currentIdx++; renderCard(); });
+    var bprv = document.getElementById('btnPrev');
+    if(bprv) bprv.addEventListener('click', function(){ state.currentIdx--; renderCard(); });
+    var bback = document.getElementById('btnBackList');
+    if(bback) bback.addEventListener('click', function(){ showWrongBook(); });
+  }
+}
+
+function showResult(){
+  state.finished = true;
+  state.pool.forEach(function(qid){
+    var q = ALL_Q[qid];
+    var picks = state.multiPicks[qid] || [];
+    var isMulti = Array.isArray(q.ans);
+    var ok;
+    if(isMulti){
+      ok = picks.length === q.ans.length && q.ans.every(function(a){return picks.indexOf(a)>=0});
+    } else {
+      ok = picks.length>0 && picks[0] === q.ans;
+    }
+    state.answers[qid] = ok;
+    if(!ok) state.wrongSet.add(qid);
+  });
+
+  var total = state.pool.length;
+  var correct = 0;
+  state.pool.forEach(function(qid){ if(state.answers[qid]) correct++; });
+  recordRound(total, correct);
+  var pct = Math.round(correct/total*100);
+  var stars = pct>=90?'⭐⭐⭐⭐⭐':pct>=80?'⭐⭐⭐⭐':pct>=70?'⭐⭐⭐':pct>=60?'⭐⭐':'⭐';
+
+  var dots = '';
+  state.pool.forEach(function(qid){
+    dots += '<span class="dot '+(state.answers[qid]?'g':'r')+'"></span>';
+  });
+
+  var wrongQids = state.pool.filter(function(qid){ return !state.answers[qid]; });
+
+  var h = '<div class="result-box">';
+  h += '<div class="score">'+correct+'</div>';
+  h += '<div class="sub">共'+total+'题 · 正确率 '+pct+'%</div>';
+  h += '<div class="stars">'+stars+'</div>';
+  h += '<div class="dot-row">'+dots+'</div>';
+
+  if(wrongQids.length > 0){
+    h += '<div class="section-title" style="color:var(--red);text-align:left">📝 错题回顾（点击进入翻页模式）</div>';
+    wrongQids.forEach(function(qid){
+      var q = ALL_Q[qid];
+      var picks = state.multiPicks[qid] || [];
+      var isMulti = Array.isArray(q.ans);
+      var userAns = isMulti ? picks.map(function(p){return String.fromCharCode(65+p)}).join('') : (picks.length>0?String.fromCharCode(65+picks[0]):'未作答');
+      var correctAns = isMulti ? q.ans.map(function(a){return String.fromCharCode(65+a)}).join('') : String.fromCharCode(65+q.ans);
+      h += '<div class="wrong-item" data-review="'+qid+'">';
+      h += '<span style="color:var(--sub);font-size:12px">#'+(qid+1)+'</span> ';
+      h += '<span style="color:var(--red)">你选：'+userAns+'</span> → <span style="color:var(--green)">正确：'+correctAns+'</span><br>';
+      h += q.q.substring(0,70);
+      h += '</div>';
+    });
+  } else {
+    h += '<div style="margin:12px;color:var(--green);font-weight:600;font-size:18px">🎉 全部正确！</div>';
+  }
+
+  h += '<div style="padding:12px 16px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center">';
+  h += '<button class="btn-nxt" id="btnRedo">🔄 再来一组</button>';
+  h += '<button class="btn-nxt red" id="btnWrongBook">📕 错题本('+state.wrongSet.size+'题)</button>';
+  h += '<button class="btn-nxt outline" id="btnHome">🔙 首页</button>';
+  h += '</div>';
+  h += '</div>';
+
+  document.getElementById('sb').innerHTML = h;
+  document.getElementById('sb').style.display='block';
+  document.getElementById('qa').innerHTML='';
+
+  document.getElementById('btnRedo').addEventListener('click', startRound);
+  document.getElementById('btnWrongBook').addEventListener('click', showWrongBook);
+  document.getElementById('btnHome').addEventListener('click', goHome);
+
+  document.querySelectorAll('.wrong-item[data-review]').forEach(function(el){
+    el.addEventListener('click', function(){
+      var qid = parseInt(el.getAttribute('data-review'));
+      startReviewMode(qid);
+    });
+  });
+}
+
+// 错题翻页模式：点一个错题，进入翻页浏览所有错题
+function startReviewMode(startQid){
+  var allWrong = Array.from(state.wrongSet);
+  state.mode = 'review';
+  state.pool = allWrong;
+  state.currentIdx = allWrong.indexOf(startQid);
+  if(state.currentIdx < 0) state.currentIdx = 0;
+  state.finished = false;
+  document.getElementById('sb').style.display='none';
+  renderCard();
+}
+
+function showWrongBook(){
+  state.mode = 'normal';
+  var arr = Array.from(state.wrongSet);
+  if(arr.length===0){
+    document.getElementById('qa').innerHTML='<div class="card" style="text-align:center;padding:32px"><h3 style="font-size:20px">🎉 暂无错题</h3><br><button class="btn-nxt" id="btnStartNew2">开始刷题</button></div>';
+    document.getElementById('sb').style.display='none';
+    document.getElementById('btnStartNew2').addEventListener('click', startRound);
+    return;
+  }
+  var h = '<div class="section-title" style="color:var(--red)">📝 错题本（共'+arr.length+'题）点击可翻页浏览</div>';
+  arr.forEach(function(qid){
+    var q = ALL_Q[qid];
+    var picks = state.multiPicks[qid] || [];
+    var isMulti = Array.isArray(q.ans);
+    var userAns = isMulti ? picks.map(function(p){return String.fromCharCode(65+p)}).join('') : (picks.length>0?String.fromCharCode(65+picks[0]):'未作答');
+    var correctAns = isMulti ? q.ans.map(function(a){return String.fromCharCode(65+a)}).join('') : String.fromCharCode(65+q.ans);
+    h += '<div class="wrong-item" data-review="'+qid+'">';
+    h += '<span style="color:var(--sub);font-size:12px">#'+(qid+1)+'</span> ';
+    h += '<span style="color:var(--red)">你选：'+userAns+'</span> → <span style="color:var(--green)">正确：'+correctAns+'</span><br>';
+    h += q.q.substring(0,70);
+    h += '</div>';
+  });
+  h += '<div style="padding:12px 16px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center">';
+  h += '<button class="btn-nxt" id="btnDoWrong">🚀 刷错题</button>';
+  h += '<button class="btn-nxt red" id="btnClear">🗑 清空</button>';
+  h += '<button class="btn-nxt outline" id="btnGoHome2">🔙 首页</button>';
+  h += '</div>';
+  document.getElementById('qa').innerHTML=h;
+  document.getElementById('sb').style.display='none';
+
+  document.querySelectorAll('.wrong-item[data-review]').forEach(function(el){
+    el.addEventListener('click', function(){
+      var qid = parseInt(el.getAttribute('data-review'));
+      startReviewMode(qid);
+    });
+  });
+  document.getElementById('btnDoWrong').addEventListener('click', function(){
+    var a = Array.from(state.wrongSet);
+    if(a.length===0) return;
+    state.mode = 'normal';
+    state.pool = a;
+    state.currentIdx = 0;
+    state.multiPicks = {};
+    state.answers = {};
+    state.finished = false;
+    renderCard();
+  });
+  document.getElementById('btnClear').addEventListener('click', function(){
+    state.wrongSet.clear();
+    showWrongBook();
+  });
+  document.getElementById('btnGoHome2').addEventListener('click', goHome);
+}
+
+function goHome(){
+  state.mode='normal'; state.pool=[]; state.currentIdx=0;
+  state.multiPicks={}; state.answers={}; state.finished=false;
+  document.getElementById('qa').innerHTML='';
+  document.getElementById('sb').style.display='none';
+  document.getElementById('setup').style.display='block';
+  updateStatsDisplay();
+}
+</script>
+</body>
+</html>
