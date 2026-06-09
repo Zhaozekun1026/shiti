@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>首钢网络安全刷题 · 粉笔模式</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,sans-serif;background:#f0f2f5;color:#333}
+.header{background:linear-gradient(135deg,#1a3a5c,#2d6aa0);color:#fff;padding:12px 16px;text-align:center}
+.header h2{font-size:17px}.header .s{font-size:12px;opacity:.9}
+.setup-box{background:#fff;margin:16px;border-radius:12px;padding:20px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.setup-box h3{font-size:20px;margin-bottom:12px;color:#1a3a5c}
+.setup-box p{font-size:14px;color:#666;margin-bottom:8px}
+.num-select{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:16px 0}
+.num-btn{padding:10px 20px;border-radius:20px;border:2px solid #ddd;background:#fff;font-size:15px;cursor:pointer;transition:.2s}
+.num-btn.active{background:#2d6aa0;color:#fff;border-color:#2d6aa0}
+.btn-start{display:block;width:80%;margin:16px auto 0;padding:14px;border-radius:24px;background:linear-gradient(135deg,#2d6aa0,#1a6bc0);color:#fff;font-size:17px;font-weight:bold;border:none;cursor:pointer}
+.card{background:#fff;margin:10px;border-radius:12px;padding:14px;box-shadow:0 2px 6px rgba(0,0,0,.06)}
+.card .num{font-size:11px;color:#999}
+.card .txt{font-size:15px;font-weight:600;margin:8px 0 12px;line-height:1.5}
+.opt{display:block;width:100%;padding:11px 12px;margin-bottom:6px;border:2px solid #e8e8e8;border-radius:10px;background:#fafafa;font-size:14px;text-align:left;cursor:pointer;transition:.2s}
+.opt:active{transform:scale(.98)}
+.opt.correct{border-color:#4caf50!important;background:#e8f5e9!important;color:#2e7d32!important}
+.opt.wrong{border-color:#f44336!important;background:#ffebee!important;color:#c62828!important}
+.opt.show-correct{border-color:#4caf50!important;background:#e8f5e9!important}
+.exp{background:#fff8e1;border-left:4px solid #ffc107;padding:10px;border-radius:6px;margin-top:8px;font-size:13px;line-height:1.6;display:none}
+.exp.show{display:block}
+.btn{display:inline-block;padding:8px 18px;border-radius:18px;font-size:13px;font-weight:600;cursor:pointer;border:none;margin-top:6px}
+.btn-next{background:#2d6aa0;color:#fff;margin-right:8px}
+.tabs{display:flex;gap:6px;padding:8px 10px}
+.tab{flex:1;padding:8px;text-align:center;border-radius:8px;font-size:12px;cursor:pointer;background:#fff;border:2px solid #e8e8e8}
+.tab.active{background:#2d6aa0;color:#fff;border-color:#2d6aa0}
+.result-box{background:#fff;margin:16px;border-radius:16px;padding:24px;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,.08)}
+.result-box .score{font-size:64px;font-weight:bold;color:#2d6aa0}
+.result-box .sub{font-size:14px;color:#666;margin:8px 0}
+.result-box .stars{font-size:32px;margin:12px 0}
+.wrong-list{margin:12px;text-align:left}
+.wrong-item{background:#fff;margin:8px 0;padding:12px;border-radius:10px;border-left:4px solid #f44336;font-size:14px;cursor:pointer}
+.wrong-item.c{display:block}
+.footer{text-align:center;padding:12px;color:#aaa;font-size:11px}
+.multihint{font-size:11px;color:#f57c00;margin-bottom:4px}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin:0 2px}
+.dot.r{background:#4caf50}.dot.w{background:#f44336}.dot.u{background:#ccc}
+</style>
+</head>
+<body>
+<div class="header">
+<h2>🔒 首钢网络安全刷题</h2>
+<div class="s">题库 187 题 | 粉笔模式：每次一组，做完看成绩</div>
+</div>
+
+<div class="tabs" id="tabs" style="display:none">
+<div class="tab active" onclick="newRound()">📋 新一组</div>
+<div class="tab" onclick="showWrong()">❌ 错题本</div>
+</div>
+
+<div id="setup" class="setup-box">
+<h3>📝 选择每组题数</h3>
+<div class="num-select">
+<div class="num-btn" onclick="selNum(10,this)">10题</div>
+<div class="num-btn" onclick="selNum(20,this)">20题</div>
+<div class="num-btn active" onclick="selNum(30,this)">30题</div>
+<div class="num-btn" onclick="selNum(50,this)">50题</div>
+<div class="num-btn" onclick="selNum(0,this)">全部(187题)</div>
+</div>
+<button class="btn-start" onclick="startRound()">🚀 开始刷题</button>
+</div>
+
+<div id="qa"></div>
+<div id="sb" style="display:none"></div>
+<div class="footer">点击选项直接作答 · 做完一组看成绩 · 错题自动收集</div>
+
+<script>
+var Q=[{"q": "机密性是指确保信息随时可被授权者访问的能力。（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 1, "exp": ""}, {"q": "安全事件分级依据？", "opts": ["时间", "影响范围和紧急程度", "名称", "地点"], "ans": 1, "exp": ""}, {"q": "下列哪项是ISMS审核员的常见资格？", "opts": ["CISA", "CISSP", "ISO 27001主任审核员", "以上都是"], "ans": 3, "exp": ""}, {"q": "等保2.0的性质是？", "opts": ["国际通用标准", "我国信息安全保护的国家标准", "仅适用于金融行业", "等同于NIST CSF"], "ans": 1, "exp": ""}, {"q": "可用性是防篡改？（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 1, "exp": ""}, {"q": "PDCA中Check阶段主要是实施控制措施。（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 1, "exp": ""}, {"q": "DDoS攻击的目的是？", "opts": ["窃取用户密码", "耗尽服务器资源", "上传恶意文件", "篡改数据库内容"], "ans": 1, "exp": ""}, {"q": "VPN技术可以实现？", "opts": ["远程安全访问", "网络匿名", "数据压缩", "负载均衡"], "ans": 0, "exp": ""}, {"q": "《个保法》跨境传输？", "opts": ["随意传输", "需安全评估/标准合同/认证", "完全禁止", "没要求"], "ans": 1, "exp": ""}, {"q": "PDCA中制定ISMS策略属于？", "opts": ["Plan计划", "Do执行", "Check检查", "Act处理"], "ans": 0, "exp": ""}, {"q": "下列哪项属于ISMS中的组织控制？", "opts": ["用户访问管理", "加密", "物理安全", "信息安全角色和责任定义"], "ans": 3, "exp": ""}, {"q": "网络攻击是当前信息安全面临的最大威胁之一。（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 0, "exp": ""}, {"q": "网络安全法施行时间？", "opts": ["2016", "2017", "2018", "2019"], "ans": 1, "exp": ""}, {"q": "中美黑客大战时期？", "opts": ["门户攻击时代", "蠕虫时代", "木马时代", "数据算法时代"], "ans": 0, "exp": ""}, {"q": "最高安全指导文件？", "opts": ["安全策略", "操作手册", "审计报告", "培训计划"], "ans": 0, "exp": ""}, {"q": "渗透测试前期？", "opts": ["漏洞扫描", "签授权保密协议", "擦痕迹", "写报告"], "ans": 1, "exp": ""}, {"q": "各级组织应孤立？（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 1, "exp": ""}, {"q": "安全运营资产清单？", "opts": ["资产管理", "风险评估", "漏洞管理", "威胁情报"], "ans": 0, "exp": ""}, {"q": "安全运营评价域子域包括？（多选）", "opts": ["网络安全运营", "信息安全运营", "安全统筹", "安全能力"], "ans": [0, 1], "exp": ""}, {"q": "DRP关注？", "opts": ["日常运维", "灾难后恢复IT", "意识培训", "版本管理"], "ans": 1, "exp": ""}, {"q": "保险是风险转移？（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 0, "exp": ""}, {"q": "建立ISMS的关键成功因素？（多选）", "opts": ["明确的安全方针策略", "全员安全意识培训", "基于风险的资产保护", "有效的事件管理过程"], "ans": [0, 1, 2, 3], "exp": ""}, {"q": "TCP三次握手的正确顺序是？", "opts": ["SYN->SYN-ACK->ACK", "SYN->ACK->SYN-ACK", "ACK->SYN->SYN-ACK", "SYN-ACK->SYN->ACK"], "ans": 0, "exp": ""}, {"q": "安全事件分级的主要依据是？", "opts": ["事件发生的时间", "事件的影响范围和紧急程度", "事件名称", "事件发生的地点"], "ans": 1, "exp": ""}, {"q": "SSL/TLS协议的主要作用是？", "opts": ["防止DDoS", "为网络通信提供加密和身份认证", "加速网络传输", "防止SQL注入"], "ans": 1, "exp": ""}, {"q": "以下哪项属于被动信息收集方式？", "opts": ["端口扫描", "直接访问目标网站", "使用Google搜索公开信息", "发送探测请求包"], "ans": 2, "exp": ""}, {"q": "安全本质是绝对安全？（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 1, "exp": ""}, {"q": "PDCA制定ISMS？", "opts": ["Plan", "Do", "Check", "Act"], "ans": 0, "exp": ""}, {"q": "中美黑客大战发生在？", "opts": ["门户攻击时代", "网络蠕虫时代", "僵尸木马时代", "数据算法时代"], "ans": 0, "exp": ""}, {"q": "最小权限越多越好？（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 1, "exp": ""}, {"q": "无内部DLP方案？", "opts": ["仅边界防火墙", "部署DLP系统", "关USB", "禁上网"], "ans": 0, "exp": ""}, {"q": "《网络安全法》正式施行时间是？", "opts": ["2016年", "2017年", "2018年", "2019年"], "ans": 1, "exp": ""}, {"q": "phpStudy数据库？", "opts": ["Oracle", "SQL Server", "MySQL", "PostgreSQL"], "ans": 2, "exp": ""}, {"q": "DMZ的作用是？", "opts": ["加密数据", "隔离外网和内网", "加速网络", "存储备份"], "ans": 1, "exp": ""}, {"q": "数据安全法有审查制度？（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 0, "exp": ""}, {"q": "关于安全审计日志正确说法是？", "opts": ["日志可有可无", "日志应定期审查并安全存储", "日志可以随意删除", "日志仅用于性能分析"], "ans": 1, "exp": ""}, {"q": "访问控制列表对应？", "opts": ["身份认证", "访问授权", "ACL", "访问审计"], "ans": 2, "exp": ""}, {"q": "《关基条例》中运营者应优先采购？", "opts": ["国外知名品牌", "安全可信的网安产品和服务", "价格最低的", "功能最复杂的"], "ans": 1, "exp": ""}, {"q": "ISO27001核心作用？", "opts": ["仅规定技术防护", "提供建立ISMS的框架", "定义软件编码规范", "仅适用政府部门"], "ans": 1, "exp": ""}, {"q": "信息安全三要素CIA不包括？", "opts": ["机密性", "完整性", "可用性", "可扩展性"], "ans": 3, "exp": ""}, {"q": "关于纵深防御策略理解正确的是？", "opts": ["只在网络边界部署安全措施", "多层次多手段的安全防护", "只依赖一种安全产品", "只需要技术防护"], "ans": 1, "exp": ""}, {"q": "ISMS范围可定义为？", "opts": ["只能是所有信息系统", "只能是部分信息系统", "组织整体或特定范围", "仅包含硬件设备"], "ans": 2, "exp": ""}, {"q": "信息收集的方向包括？（多选）", "opts": ["服务器类型", "网站容器类型与版本", "用户密码", "后台目录"], "ans": [0, 1, 3], "exp": ""}, {"q": "下列哪项属于ISMS中的技术控制？", "opts": ["密码策略", "漏洞扫描", "事件响应计划", "业务连续性计划"], "ans": 1, "exp": ""}, {"q": "风险评估中风险值等于威胁概率乘以影响程度。（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 0, "exp": ""}, {"q": "数字签名正确？（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 0, "exp": ""}, {"q": "渗透测试正确说法是？", "opts": ["可以不经授权进行", "报告只需记录漏洞", "应获得书面授权后进行", "等同于漏洞扫描"], "ans": 2, "exp": ""}, {"q": "非物理安全措施？", "opts": ["设备安置", "门禁", "恶意代码防范", "消防"], "ans": 2, "exp": ""}, {"q": "ISMS无需考虑法律？（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 1, "exp": ""}, {"q": "安全管理只需技术？（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 1, "exp": ""}, {"q": "信息安全管理只需要关注技术层面，不需要考虑人员和管理因素。（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 1, "exp": ""}, {"q": "建立信息安全管理制度首先要做？", "opts": ["采购安全设备", "明确安全方针和目标", "配置防火墙规则", "培训员工"], "ans": 1, "exp": ""}, {"q": "数字签名可以同时提供？", "opts": ["机密性和完整性", "完整性和不可否认性", "可用性和机密性", "完整性和可用性"], "ans": 1, "exp": ""}, {"q": "保证信息系统可用性通常采用？", "opts": ["加密技术", "数字签名", "备份和容灾", "访问控制"], "ans": 2, "exp": ""}, {"q": "下列哪个模型是网络安全成熟度模型？", "opts": ["C2M2", "TOGAF", "SABSA", "MSF"], "ans": 0, "exp": ""}, {"q": "企业构建ISMS无需考虑法律法规要求。（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 1, "exp": ""}, {"q": "等保2.0等级？", "opts": ["3级", "4级", "5级", "6级"], "ans": 2, "exp": ""}, {"q": "灾难恢复计划(DRP)主要关注？", "opts": ["日常安全运维", "重大灾难后恢复IT系统和业务", "员工安全意识培训", "软件版本管理"], "ans": 1, "exp": ""}, {"q": "信息资产只包括数据和系统不包括硬件和人员。（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 1, "exp": ""}, {"q": "HTTPS协议默认使用的端口是？", "opts": ["80", "443", "8080", "8443"], "ans": 1, "exp": ""}, {"q": "不安全设计的缓冲区溢出属于？", "opts": ["Web安全漏洞", "系统级安全漏洞", "邮件安全", "数据库安全"], "ans": 1, "exp": ""}, {"q": "应急响应的首要目标是？", "opts": ["找到攻击者", "恢复业务连续性", "起诉攻击者", "升级系统补丁"], "ans": 1, "exp": ""}, {"q": "Phishing利用？", "opts": ["系统漏洞", "社会工程学手段", "协议缺陷", "暴力破解"], "ans": 1, "exp": ""}, {"q": "安全运营域中资产清单管理对应？", "opts": ["全面识别并分类分级管理资产", "安全风险评估", "漏洞管理", "威胁情报管理"], "ans": 0, "exp": ""}, {"q": "数字签名提供？", "opts": ["机密性和完整性", "完整性和不可否认性", "可用性和机密性", "完整性和可用性"], "ans": 1, "exp": ""}, {"q": "ISO27001国际公认？（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 0, "exp": ""}, {"q": "CVE编号的含义？", "opts": ["漏洞利用代码", "漏洞唯一标识编码", "攻击工具编号", "安全标准编号"], "ans": 1, "exp": ""}, {"q": "等保2.0定级依据包括？（多选）", "opts": ["对公民权益损害程度", "对社会秩序损害程度", "对国家安全损害程度", "系统建设成本"], "ans": [0, 1, 2], "exp": ""}, {"q": "处理信息合法正当必要？（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 0, "exp": ""}, {"q": "信息资产包括？", "opts": ["仅数据", "仅硬件", "仅软件", "硬件软件数据人员服务等"], "ans": 3, "exp": ""}, {"q": "DDoS目的？", "opts": ["窃取密码", "耗尽资源", "上传文件", "篡改数据库"], "ans": 1, "exp": ""}, {"q": "漏洞扫描的主要作用是？", "opts": ["利用漏洞攻击", "识别系统中存在的已知安全漏洞", "实时阻止网络攻击", "对数据进行加密"], "ans": 1, "exp": ""}, {"q": "评估检查通常由哪个层级执行？", "opts": ["业务部门", "网络安全专业团队", "决策指挥层", "外部审计"], "ans": 1, "exp": ""}, {"q": "ISO27002内容？", "opts": ["体系要求", "实践准则", "风险指南", "度量指标"], "ans": 1, "exp": ""}, {"q": "渗透测试前期准备阶段包括？", "opts": ["漏洞扫描", "签署授权书及保密协议", "痕迹擦除", "报告输出"], "ans": 1, "exp": ""}, {"q": "官方未公布补丁的漏洞被称为？", "opts": ["1day", "0day", "Exploit", "Backdoor"], "ans": 1, "exp": ""}, {"q": "机密性是随时访问？（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 1, "exp": ""}, {"q": "低风险处置？", "opts": ["必须消除", "转移即消失", "接受", "买保险"], "ans": 2, "exp": ""}, {"q": "下列哪项属于常见的网络攻击类型？", "opts": ["SQL注入", "社会工程学", "分布式拒绝服务", "以上都是"], "ans": 3, "exp": ""}, {"q": "TCP三次握手？", "opts": ["SYN->SYN-ACK->ACK", "SYN->ACK->SYN-ACK", "ACK->SYN->SYN-ACK", "SYN-ACK->SYN->ACK"], "ans": 0, "exp": ""}, {"q": "购买保险属于哪种风险处置方式？", "opts": ["风险接受", "风险降低", "风险转移", "风险规避"], "ans": 2, "exp": ""}, {"q": "资产分类核心目的？", "opts": ["计数", "适当级别保护", "区分购买时间", "财务核算"], "ans": 1, "exp": ""}, {"q": "防火墙位置？", "opts": ["应用层", "网络层", "物理层", "传输层"], "ans": 1, "exp": ""}, {"q": "XSS攻击发生在哪个环境中？", "opts": ["数据库", "服务器", "客户端浏览器", "网络传输层"], "ans": 2, "exp": ""}, {"q": "双因素认证(2FA)是指？", "opts": ["两个密码", "两种不同类型验证", "两台设备认证", "双重防火墙"], "ans": 1, "exp": ""}, {"q": "XSS攻击环境？", "opts": ["数据库", "服务器", "客户端浏览器", "传输层"], "ans": 2, "exp": ""}, {"q": "DNS先查？", "opts": ["hosts", "根服务器", "顶级域", "权威"], "ans": 1, "exp": ""}, {"q": "信息安全三要素包括？（多选）", "opts": ["机密性", "完整性", "可用性", "可扩展性"], "ans": [0, 1, 2], "exp": ""}, {"q": "以下哪项属于社会工程学攻击？", "opts": ["SQL注入", "DDoS", "冒充IT人员索要密码", "缓冲区溢出"], "ans": 2, "exp": ""}, {"q": "哪个框架以识别/保护/检测/响应/恢复五大核心功能著称？", "opts": ["ISO 27001", "NIST CSF", "TOGAF", "SABSA"], "ans": 1, "exp": ""}, {"q": "风险处置四种方式不包括？", "opts": ["规避", "降低", "转移", "消除"], "ans": 3, "exp": ""}, {"q": "各级安全组织应该孤立工作互不干涉。（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 1, "exp": ""}, {"q": "信息安全三层架构不包括哪种表述？", "opts": ["管理层技术层操作层", "决策层管理层执行层", "战略层战术层运营层", "以上表述均可"], "ans": 3, "exp": ""}, {"q": "安全策略由谁定？", "opts": ["IT部门", "最高管理层", "普通员工", "外部顾问"], "ans": 1, "exp": ""}, {"q": "泄露仅恶意导致？（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 1, "exp": ""}, {"q": "PDCA Check是实施？（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 1, "exp": ""}, {"q": "BS 7799是什么？", "opts": ["信息安全建设指南", "英国标准", "ISO 27001的前身", "以上都是"], "ans": 3, "exp": ""}, {"q": "《个人信息保护法》中敏感个人信息包括？", "opts": ["姓名", "性别", "生物识别信息", "工作单位"], "ans": 2, "exp": ""}, {"q": "SSL/TLS作用？", "opts": ["防DDoS", "加密和身份认证", "加速", "防SQL注入"], "ans": 1, "exp": ""}, {"q": "关于风险处置正确的是？", "opts": ["所有风险都必须消除", "风险转移意味着风险消失", "风险接受是对低风险的处置方式", "风险规避就是买保险"], "ans": 2, "exp": ""}, {"q": "中国正式接入国际互联网是哪一年？", "opts": ["1990", "1994", "2000", "2008"], "ans": 1, "exp": ""}, {"q": "可用性是指防止信息被未经授权篡改的能力。（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 1, "exp": ""}, {"q": "完整性是指防止信息泄露给未授权者的能力。（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 1, "exp": ""}, {"q": "等保2.0性质？", "opts": ["国际标准", "我国国标", "仅金融", "等于NIST"], "ans": 1, "exp": ""}, {"q": "《关基条例》的制定依据是？", "opts": ["网络安全法", "数据安全法", "民法典", "刑法"], "ans": 0, "exp": ""}, {"q": "访问控制中明确用户可访问资源对应？", "opts": ["身份认证", "访问授权", "访问控制列表", "访问审计"], "ans": 2, "exp": ""}, {"q": "完整性是防泄露？（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 1, "exp": ""}, {"q": "防范网络钓鱼的有效措施？（多选）", "opts": ["启用多因素认证", "部署邮件安全网关", "开展安全意识培训", "使用简单密码"], "ans": [0, 1, 2], "exp": ""}, {"q": "纵深防御是？", "opts": ["单层防御", "多层多手段防护", "只靠防火墙", "只靠加密"], "ans": 1, "exp": ""}, {"q": "信息安全的本质是追求绝对安全消除所有风险。（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 1, "exp": ""}, {"q": "信息安全管理的免疫系统比喻强调？", "opts": ["被动防御", "主动发现和响应", "事后恢复", "外部依赖"], "ans": 1, "exp": ""}, {"q": "ICS安全不包括？", "opts": ["知识产权", "生产连续性", "提高工资", "法规要求"], "ans": 2, "exp": ""}, {"q": "《网络安全法》要求措施？", "opts": ["数据分类", "备份", "加密", "以上都是"], "ans": 3, "exp": ""}, {"q": "基线核查的主要目的是？", "opts": ["发现高级威胁", "确认系统配置符合安全基准", "修复安全漏洞", "提高系统性能"], "ans": 1, "exp": ""}, {"q": "跨部门协作有效？（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 0, "exp": ""}, {"q": "CIA三要素包括？", "opts": ["机密性完整性可用性", "保密性不可否认性可控性", "认证授权审计", "预防检测响应"], "ans": 0, "exp": ""}, {"q": "下列哪项不是ISMS标准的常见认证？", "opts": ["ISO 27001", "ISO 27701", "ISO 22301", "ISO 9001"], "ans": 3, "exp": ""}, {"q": "ISO 27001是国际公认的信息安全管理体系标准。（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 0, "exp": ""}, {"q": "安全事件管理目标？", "opts": ["杜绝事件", "一致有效方法管理", "仅记录", "仅技术"], "ans": 1, "exp": ""}, {"q": "《数据安全法》规定数据交易中介服务机构需履行？", "opts": ["无需资质", "报告义务", "登记义务", "审查义务"], "ans": 3, "exp": ""}, {"q": "内部人员泄露信息只能由恶意行为导致与疏忽无关。（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 1, "exp": ""}, {"q": "数字签名可以同时提供完整性和不可否认性。（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 0, "exp": ""}, {"q": "OWASP Top 10是？", "opts": ["十大编程语言", "十大Web安全风险", "十大操作系统", "十大安全公司"], "ans": 1, "exp": ""}, {"q": "渗透测试必须先？", "opts": ["直接扫描", "获得书面授权", "开始攻击", "写报告"], "ans": 1, "exp": ""}, {"q": "下列哪项不属于物理与环境安全的控制措施？", "opts": ["设备安置保护", "门禁系统", "恶意代码防范", "消防系统"], "ans": 2, "exp": ""}, {"q": "漏洞扫描作用？", "opts": ["利用漏洞", "识别已知漏洞", "阻止攻击", "加密数据"], "ans": 1, "exp": ""}, {"q": "ISMS范围？", "opts": ["所有系统", "部分系统", "整体或特定范围", "仅硬件"], "ans": 2, "exp": ""}, {"q": "内部人员泄露信息的原因？", "opts": ["仅疏忽", "仅恶意行为", "疏忽或恶意行为", "技术故障"], "ans": 2, "exp": ""}, {"q": "《网络安全法》仅适用于政府机构不适用于普通企业。（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 1, "exp": ""}, {"q": "关基条例依据？", "opts": ["网安法", "数据安全法", "民法典", "刑法"], "ans": 0, "exp": ""}, {"q": "网络钓鱼(Phishing)攻击主要利用？", "opts": ["系统漏洞", "社会工程学手段", "网络协议缺陷", "密码暴力破解"], "ans": 1, "exp": ""}, {"q": "信息安全核心管理要素包括？（多选）", "opts": ["人员", "技术", "流程", "组织架构"], "ans": [0, 1, 2, 3], "exp": ""}, {"q": "跨部门协作可以有效应对日益复杂的安全挑战。（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 0, "exp": ""}, {"q": "渗透测试常见阶段包括？（多选）", "opts": ["信息收集", "漏洞分析", "漏洞利用", "报告输出"], "ans": [0, 1, 2, 3], "exp": ""}, {"q": "非密码最佳实践？", "opts": ["简单易记密码", "定期更换", "多因素认证", "不同密码"], "ans": 0, "exp": ""}, {"q": "建立ISMS首先要？", "opts": ["采购设备", "明确安全方针和目标", "配防火墙", "培训员工"], "ans": 1, "exp": ""}, {"q": "信息管理被比喻为数字时代的什么？", "opts": ["防火墙", "免疫系统", "杀毒软件", "入侵检测系统"], "ans": 1, "exp": ""}, {"q": "社会工程学攻击？", "opts": ["SQL注入", "DDoS", "冒充IT索要密码", "缓冲区溢出"], "ans": 2, "exp": ""}, {"q": "信息安全三层架构？", "opts": ["管理层技术层操作层", "决策层管理层执行层", "战略层战术层运营层", "以上均可"], "ans": 3, "exp": ""}, {"q": "信息安全管理的目标是实现？", "opts": ["零风险", "绝对安全", "风险可接受", "完全合规"], "ans": 2, "exp": ""}, {"q": "最小权限原则是指？", "opts": ["用户拥有所有权限", "用户拥有其工作所需的最小权限", "管理员拥有最小权限", "系统拥有最小权限"], "ans": 1, "exp": ""}, {"q": "ISMS测量的常用方法？", "opts": ["KPI和KRI", "仅问卷", "仅渗透测试", "仅日志审计"], "ans": 0, "exp": ""}, {"q": "信息资产包括？", "opts": ["仅数据", "仅硬件", "仅软件", "硬件软件数据人员服务"], "ans": 3, "exp": ""}, {"q": "内部泄露原因？", "opts": ["仅疏忽", "仅恶意", "疏忽或恶意", "技术故障"], "ans": 2, "exp": ""}, {"q": "防止内部数据泄露的有效措施是？", "opts": ["仅在网络边界部署防火墙", "部署DLP数据防泄露系统", "关闭所有USB接口", "禁止员工上网"], "ans": 1, "exp": ""}, {"q": "风险值=威胁×影响？（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 0, "exp": ""}, {"q": "安全成熟度3级的描述是？", "opts": ["基础被动", "计划控制", "体系规范", "积极优化"], "ans": 2, "exp": ""}, {"q": "业务连续性信息安全控制措施？（多选）", "opts": ["信息安全连续性计划", "关键数据备份恢复", "建设备用数据中心", "风险评估与响应"], "ans": [0, 1, 2], "exp": ""}, {"q": "《个人信息保护法》规定处理个人信息应遵循合法正当必要原则。（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 0, "exp": ""}, {"q": "等保2.0安全保护等级分为几级？", "opts": ["3级", "4级", "5级", "6级"], "ans": 2, "exp": ""}, {"q": "以下哪项不属于密码安全的最佳实践？", "opts": ["使用简单易记的密码", "定期更换密码", "启用多因素认证", "不使用相同密码多处登录"], "ans": 0, "exp": ""}, {"q": "信息安全事件管理的核心目标是？", "opts": ["杜绝所有事件发生", "采用一致有效的方法管理事件", "仅记录不处理", "只由技术部门负责"], "ans": 1, "exp": ""}, {"q": "PDCA循环中Plan阶段的主要工作是？", "opts": ["实施控制措施", "监控和评审", "建立目标和过程", "纠正和改进"], "ans": 2, "exp": ""}, {"q": "企业信息安全策略应由哪个层级制定？", "opts": ["IT部门", "最高管理层", "普通员工", "外部顾问"], "ans": 1, "exp": ""}, {"q": "OWASP Top 10是什么？", "opts": ["十大编程语言", "十大Web应用安全风险", "十大操作系统", "十大安全公司"], "ans": 1, "exp": ""}, {"q": "信息资产分类的核心目的是？", "opts": ["便于资产计数", "确保信息受到适当级别的保护", "区分资产购买时间", "仅用于财务核算"], "ans": 1, "exp": ""}, {"q": "NIST网络安全框架2.0新增的核心功能是？", "opts": ["识别", "保护", "治理", "恢复"], "ans": 2, "exp": ""}, {"q": "信息安全管理体系中的人员控制包括？", "opts": ["背景调查", "安全培训", "保密协议", "以上都是"], "ans": 3, "exp": ""}, {"q": "0day漏洞？", "opts": ["已修补", "官方未公布补丁", "超过一年", "不影响安全"], "ans": 1, "exp": ""}, {"q": "信息安全的本质是？", "opts": ["追求绝对安全", "消除所有风险", "将风险控制在可接受水平", "完全依赖技术"], "ans": 2, "exp": ""}, {"q": "ISO27002的核心内容是？", "opts": ["信息安全管理体系要求", "信息安全管理实践准则", "信息安全风险管理指南", "信息安全度量指标"], "ans": 1, "exp": ""}, {"q": "《数据安全法》施行时间？", "opts": ["2017", "2019", "2021", "2023"], "ans": 2, "exp": ""}, {"q": "购买保险属于风险转移的处理方式。（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 0, "exp": ""}, {"q": "SIEM的功能是？", "opts": ["阻止攻击", "集中收集和分析安全日志", "加密数据", "备份数据"], "ans": 1, "exp": ""}, {"q": "DNS解析过程中首先被查询的是？", "opts": ["本地hosts文件", "根服务器", "顶级域名服务器", "权威域名服务器"], "ans": 1, "exp": ""}, {"q": "安全审计日志？", "opts": ["可有可无", "定期审查并安全存储", "可随意删除", "仅性能分析"], "ans": 1, "exp": ""}, {"q": "ICS安全重要性不包括？", "opts": ["保护知识产权", "维护生产连续性", "提高员工工资", "遵守法规要求"], "ans": 2, "exp": ""}, {"q": "HTTPS端口？", "opts": ["80", "443", "8080", "8443"], "ans": 1, "exp": ""}, {"q": "IBM CBBM方法中，组件是指？", "opts": ["软件模块", "业务流程中的可管理单元", "硬件设备", "数据库表"], "ans": 1, "exp": ""}, {"q": "ISO 27001的核心作用是？", "opts": ["仅规定技术防护", "提供建立ISMS的框架", "定义软件编码规范", "仅适用政府部门"], "ans": 1, "exp": ""}, {"q": "网安法仅适用政府？（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 1, "exp": ""}, {"q": "最小权限原则是指用户应该拥有尽可能多的权限。（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 1, "exp": ""}, {"q": "《网络安全法》要求措施不包括？", "opts": ["数据分类", "重要数据备份", "加密措施", "无需采取任何措施"], "ans": 3, "exp": ""}, {"q": "安全基线是？", "opts": ["最高标准", "最低标准", "可选建议", "攻击工具"], "ans": 1, "exp": ""}, {"q": "被动信息收集？", "opts": ["端口扫描", "直接访问", "Google搜索", "探测包"], "ans": 2, "exp": ""}, {"q": "中国接入互联网？", "opts": ["1990", "1994", "2000", "2008"], "ans": 1, "exp": ""}, {"q": "安全成熟度3级？", "opts": ["基础被动", "计划控制", "体系规范", "积极优化"], "ans": 2, "exp": ""}, {"q": "phpStudy集成了哪种数据库？", "opts": ["Oracle", "SQL Server", "MySQL", "PostgreSQL"], "ans": 2, "exp": ""}, {"q": "安全事件管理第一步？", "opts": ["响应", "恢复", "检测与报告", "总结"], "ans": 2, "exp": ""}, {"q": "《个人信息保护法》中处理个人信息的核心原则是？", "opts": ["合法正当必要", "快速便捷低成本", "公开透明授权", "准确完整安全"], "ans": 0, "exp": ""}, {"q": "网安法要求的安全保护义务包括？（多选）", "opts": ["制定内部安全管理制度", "防范病毒技术措施", "监测记录网络状态", "数据分类备份加密"], "ans": [0, 1, 2, 3], "exp": ""}, {"q": "风险处置不包括？", "opts": ["规避", "降低", "转移", "消除"], "ans": 3, "exp": ""}, {"q": "《数据安全法》中，国家建立数据安全审查制度。（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 0, "exp": ""}, {"q": "身份认证三因素不包括？", "opts": ["你知道的", "你拥有的", "你本身的", "你想要的"], "ans": 3, "exp": ""}, {"q": "ISMS测量的常用方法是？", "opts": ["KPI和KRI", "仅问卷调查", "仅渗透测试", "仅日志审计"], "ans": 0, "exp": ""}, {"q": "资产仅数据系统？（判断对错）", "opts": ["✓ 正确", "✗ 错误"], "ans": 1, "exp": ""}, {"q": "双因素认证(2FA)是指？", "opts": ["使用两个密码", "使用两种不同类型的验证方式", "两台设备同时认证", "双重防火墙保护"], "ans": 1, "exp": ""}];
+var groupSize=30, currentSet=[], ci=0, ad={}, roundDone=false, totalCorrect=0, totalDone=0, historyWrong=[];
+
+function selNum(n,el){
+  document.querySelectorAll('.num-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  groupSize=n;
+}
+
+function startRound(){
+  document.getElementById('setup').style.display='none';
+  document.getElementById('tabs').style.display='flex';
+  newRound();
+}
+
+function newRound(){
+  var pool=[...Array(Q.length).keys()].filter(i=>ad[i]===undefined);
+  if(pool.length===0){alert('🎉 题库已刷完！所有题都做过了。');resetAll();return}
+  var n=groupSize||pool.length;
+  n=Math.min(n,pool.length);
+  var chosen=[];
+  for(var i=0;i<n;i++){
+    var r=Math.floor(Math.random()*pool.length);
+    chosen.push(pool.splice(r,1)[0]);
+  }
+  currentSet=chosen;ci=0;roundDone=false;totalCorrect=0;totalDone=0;
+  document.getElementById('sb').style.display='none';
+  render();
+}
+
+function resetAll(){
+  ad={};historyWrong=[];groupSize=30;
+  document.getElementById('setup').style.display='block';
+  document.getElementById('tabs').style.display='none';
+  document.getElementById('qa').innerHTML='';
+  document.getElementById('sb').style.display='none';
+}
+
+function render(){
+  if(roundDone){showResult();return}
+  var t=currentSet.length;
+  if(ci>=t){
+    roundDone=true;
+    totalCorrect=currentSet.filter(i=>ad[i]===true).length;
+    totalDone=currentSet.filter(i=>ad[i]!==undefined).length;
+    currentSet.filter(i=>ad[i]===false).forEach(i=>{if(!historyWrong.includes(i))historyWrong.push(i)});
+    showResult();return
+  }
+  document.getElementById('sb').style.display='none';
+  var idx=currentSet[ci], q=Q[idx], ua=ad[idx], done=ad[idx]!==undefined, isMulti=Array.isArray(q.ans);
+  var h='<div class="card"><div class="num">第'+(ci+1)+'/'+t+'题 ｜ 题库第'+(idx+1)+'题</div>';
+  if(isMulti)h+='<div class="multihint">🔢 多选题</div>';
+  h+='<div class="txt">'+q.q+'</div>';
+  q.opts.forEach((o,i)=>{
+    var cls='opt';
+    if(done){
+      if(Array.isArray(q.ans)){
+        if(q.ans.includes(i))cls+=' correct';
+        else if(ua&&ua.includes&&ua.includes(i)&&!q.ans.includes(i))cls+=' wrong';
+        else cls+=' show-correct';
+      }else{
+        if(i===q.ans)cls+=' correct';
+        else if(typeof ua==='number'&&ua===i&&ua!==q.ans)cls+=' wrong';
+        else if(typeof ua==='number')cls+=' show-correct';
+      }
+    }
+    h+='<div class="'+cls+'" onclick="ans('+ci+','+i+')">'+String.fromCharCode(65+i)+'. '+o+'</div>';
+  });
+  h+='<div class="exp'+(done?' show':'')+'" id="e'+ci+'">💡 '+q.exp+'</div>';
+  if(done)h+='<button class="btn btn-next" onclick="ci++;render()">下一题 →</button>';
+  h+='</div>';
+  document.getElementById('qa').innerHTML=h;
+}
+
+function ans(pos,chosen){
+  var idx=currentSet[pos];
+  if(ad[idx]!==undefined)return;
+  var q=Q[idx],correct;
+  if(Array.isArray(q.ans)){
+    if(!ad._multi)ad._multi={};
+    if(!ad._multi[idx])ad._multi[idx]=[];
+    ad._multi[idx].push(chosen);
+    if(ad._multi[idx].length===q.ans.length){
+      var s=new Set(ad._multi[idx]);
+      correct=q.ans.every(a=>s.has(a))&&ad._multi[idx].length===q.ans.length;
+      ad[idx]=correct;
+    }else{render();return}
+  }else{
+    correct=(chosen===q.ans);ad[idx]=correct;
+  }
+  document.getElementById('e'+pos).classList.add('show');
+  render();
+}
+
+function showResult(){
+  var t=currentSet.length, c=totalCorrect;
+  var pct=Math.round(c/t*100);
+  var stars=pct>=90?'⭐⭐⭐⭐⭐':pct>=80?'⭐⭐⭐⭐':pct>=70?'⭐⭐⭐':pct>=60?'⭐⭐':'⭐';
+  var dots='';
+  currentSet.forEach(i=>{
+    if(ad[i]===true)dots+='<span class="dot r"></span>';
+    else if(ad[i]===false)dots+='<span class="dot w"></span>';
+    else dots+='<span class="dot u"></span>';
+  });
+  var wrongOnes=currentSet.filter(i=>ad[i]===false);
+  var h='<div class="result-box"><div class="score">'+c+'</div><div class="sub">共'+t+'题 答对'+c+'题 正确率'+pct+'%</div>';
+  h+='<div class="stars">'+stars+'</div><div>'+dots+'</div>';
+  if(wrongOnes.length>0){
+    h+='<div class="wrong-list"><b>错题回顾（点击查看详情）：</b>';
+    wrongOnes.forEach(i=>{
+      var q=Q[i];
+      h+='<div class="wrong-item" onclick="showOneQ('+i+')">❌ '+q.q.substring(0,50)+'...</div>';
+    });
+    h+='</div>';
+  }
+  h+='<br><button class="btn btn-next" onclick="newRound()">🔄 再来一组</button>';
+  h+='<button class="btn btn-next" style="background:#fff;color:#2d6aa0;border:2px solid #2d6aa0" onclick="showAll()">🔙 返回首页</button>';
+  if(wrongOnes.length>0)h+='<button class="btn btn-next" style="background:#f57c00;color:#fff" onclick="showWrong()">📝 查看错题本</button>';
+  h+='</div>';
+
+  var overall=Object.values(ad).filter(v=>v===true).length;
+  var overallT=Object.keys(ad).length;
+  h+='<div style="text-align:center;font-size:12px;color:#999;padding:8px">累计正确：'+overall+'/'+overallT+' 题</div>';
+  document.getElementById('sb').innerHTML=h;
+  document.getElementById('sb').style.display='block';
+  document.getElementById('qa').innerHTML='';
+}
+
+function showOneQ(idx){
+  document.getElementById('sb').style.display='none';
+  var q=Q[idx],isMulti=Array.isArray(q.ans);
+  var h='<div class="card" style="margin:16px"><div class="num">题库第'+(idx+1)+'题</div>';
+  h+='<div class="txt">'+q.q+'</div>';
+  q.opts.forEach((o,i)=>{
+    var cls='opt';
+    if(Array.isArray(q.ans)){if(q.ans.includes(i))cls+=' correct'}
+    else{if(i===q.ans)cls+=' correct'}
+    h+='<div class="'+cls+'">'+String.fromCharCode(65+i)+'. '+o+'</div>';
+  });
+  h+='<div class="exp show">💡 '+q.exp+'</div>';
+  h+='<button class="btn btn-next" onclick="newRound()">🔄 返回刷题</button></div>';
+  document.getElementById('qa').innerHTML=h;
+}
+
+function showWrong(){
+  document.getElementById('sb').style.display='none';
+  if(historyWrong.length===0){document.getElementById('qa').innerHTML='<div class="card" style="text-align:center"><h3>🎉 暂无错题！</h3><br><button class="btn btn-next" onclick="newRound()">开始刷题</button></div>';return}
+  var h='<div style="padding:10px;font-size:14px;font-weight:bold;color:#f44336">📝 错题本（'+historyWrong.length+'题）</div>';
+  historyWrong.forEach(i=>{
+    var q=Q[i];
+    h+='<div class="wrong-item c" onclick="showOneQ('+i+')">❌ '+q.q.substring(0,60)+'...</div>';
+  });
+  h+='<br><button class="btn btn-next" style="margin:10px" onclick="newRound()">🔄 继续刷题</button>';
+  h+='<button class="btn btn-next" style="margin:10px;background:#fff;color:#2d6aa0;border:2px solid #2d6aa0" onclick="showAll()">🔙 返回首页</button>';
+  document.getElementById('qa').innerHTML=h;
+}
+
+function showAll(){
+  document.getElementById('qa').innerHTML='';
+  document.getElementById('sb').style.display='none';
+  document.getElementById('setup').style.display='block';
+  document.getElementById('tabs').style.display='none';
+}
+
+selNum(30,document.querySelector('.num-btn.active'));
+</script>
+</body>
+</html>
